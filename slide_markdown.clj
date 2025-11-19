@@ -28,12 +28,14 @@
 
 ;; --- Core Parsing Logic ---
 
-(defn- parse-slide-header
+(defn parse-slide-header
   "Parses the slide header (e.g., '[template-id] Title')."
   [header-line]
-  (let [[_ id title] (re-find #"^\[([\w\d-]+)\]\s*(.*)$" header-line)]
+  (if-let [[_ id title] (re-find #"^\[([\w\d-]+)\]\s*(.*)$" header-line)]
     {:template-id id
-     :title (if (str/blank? title) header-line title)}))
+     :title (when-not (str/blank? title) title)}
+    {:template-id nil
+     :title (when-not (str/blank? header-line) header-line)}))
 
 (defn- parse-slide-content
   "Parses a raw slide string into a structured map."
@@ -90,7 +92,7 @@
    "gif" "image/gif" "svg" "image/svg+xml" "webp" "image/webp"
    "mp4" "video/mp4" "webm" "video/webm" "ogg" "video/ogg"})
 
-(defn- guess-mime-type [path]
+(defn guess-mime-type [path]
   (let [ext (second (re-find #"\.([a-zA-Z0-9]+)$" path))]
     (get mime-types (str/lower-case (or ext "")) "application/octet-stream")))
 
@@ -102,11 +104,11 @@
       (io/copy in out)
       (.encodeToString (Base64/getEncoder) (.toByteArray out)))))
 
-(defn- extract-image-path [block]
+(defn extract-image-path [block]
   (or (second (re-find #"!\[.*\]\((.*?)\)" block)) block))
 
-(defn- build-css-gradient [{:keys [orientation layers]}]
-  (let [dir (if (= "vertical" orientation) "to right" "to bottom")
+(defn build-css-gradient [{:keys [orientation layers]}]
+  (let [dir (if (= "vertical" orientation) "to bottom" "to right")
         [stops] (reduce (fn [[acc cur] {:keys [color proportion]}]
                           (let [p (Double/parseDouble (str/replace proportion "%" ""))
                                 next (+ cur p)]
@@ -131,7 +133,7 @@
     (conj (vec (map vector head-els head-bls))
           [last-el (str/join "\n\n" tail-bls)])))
 
-(defn- pair-elements-with-blocks [elements blocks]
+(defn pair-elements-with-blocks [elements blocks]
   (if (>= (count blocks) (count elements))
     (pair-greedy elements blocks)
     (map vector elements blocks)))
@@ -166,9 +168,9 @@
   (str "<div style=\"" (build-position-style element) "\">Unsupported: " (:type element) "</div>"))
 
 (defn- generate-slide-content [template-elements markdown-blocks base-dir]
-  (str/join "\n" (for [[el bl] (pair-elements-with-blocks template-elements markdown-blocks)
-                       :when bl]
-                   (render-slide-element el bl base-dir))))
+  (str/join "\n" (for [[element block] (pair-elements-with-blocks template-elements markdown-blocks)
+                       :when block]
+                   (render-slide-element element block base-dir))))
 
 (defn- generate-slide-html [slide index template-map default-id base-dir]
   (let [template (get template-map (or (:template-id slide) default-id))
@@ -178,8 +180,10 @@
          "</div>")))
 
 (defn- generate-slide-options [slides]
-  (str/join "\n" (map-indexed (fn [i s]
-                                (let [label (if (:title s) (str (inc i) " - " (:title s)) (str (inc i)))]
+  (str/join "\n" (map-indexed (fn [i slide]
+                                (let [label (if (:title slide)
+                                              (str (inc i) " - " (:title slide))
+                                              (str (inc i)))]
                                   (str "<option value=\"" i "\">" label "</option>")))
                               slides)))
 
@@ -253,17 +257,20 @@
          (str/join "\n" (map-indexed #(generate-slide-html %2 %1 template-map default-id base-dir) slides))
          "</div></div>" (generate-js (count slides)) "</body></html>")))
 
+(defn load-smd [file input-file]
+  (let [path (.getCanonicalPath file)
+        output (str/replace input-file #"\.smd$" ".html")
+        data (-> (slurp path) parse-smd-file validate-presentation-data)]
+    (println "Generating HTML...")
+    (spit output (generate-html data (.getParent (io/file path))))
+    (println "Success:" output)))
+
 (defn -main [& args]
   (if-let [input-file (first args)]
     (try
       (let [file (io/file input-file)]
         (if (.exists file)
-          (let [path (.getCanonicalPath file)
-                output (str/replace input-file #"\.smd$" ".html")
-                data (-> (slurp path) parse-smd-file validate-presentation-data)]
-            (println "Generating HTML...")
-            (spit output (generate-html data (.getParent (io/file path))))
-            (println "Success:" output))
+          (load-smd file input-file)
           (println "Error: File not found.")))
       (catch Exception e (println "Error:" (.getMessage e)) (.printStackTrace e)))
     (println "Usage: ./slide-markdown.clj <input.smd>")))
