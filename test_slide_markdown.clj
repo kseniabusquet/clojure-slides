@@ -24,7 +24,7 @@
               :layers [{:color "#000" :proportion "50%"}
                        {:color "#fff" :proportion "50%"}]}
           css (slide-markdown/build-css-gradient bg)]
-      (is (str/includes? css "linear-gradient(to bottom"))
+      (is (str/includes? css "linear-gradient(to right"))
       (is (str/includes? css "#000 0.0% 50.0%"))
       (is (str/includes? css "#fff 50.0% 100.0%")))))
 

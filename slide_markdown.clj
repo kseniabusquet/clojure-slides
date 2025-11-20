@@ -107,8 +107,8 @@
 (defn extract-image-path [block]
   (or (second (re-find #"!\[.*\]\((.*?)\)" block)) block))
 
-(defn build-css-gradient [{:keys [orientation layers]}]
-  (let [dir (if (= "vertical" orientation) "to bottom" "to right")
+(defn- build-css-gradient [{:keys [orientation layers]}]
+  (let [dir (if (= "vertical" orientation) "to right" "to bottom")
         [stops] (reduce (fn [[acc cur] {:keys [color proportion]}]
                           (let [p (Double/parseDouble (str/replace proportion "%" ""))
                                 next (+ cur p)]
