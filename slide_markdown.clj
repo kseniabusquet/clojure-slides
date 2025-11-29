@@ -16,19 +16,16 @@
   (let [cache-dir (io/file ".slide-cache")
         cache-file (io/file cache-dir file-name)]
     (when-not (.exists cache-dir)
-      (println (str "Creating cache dir: " cache-dir))
       (.mkdirs cache-dir))
     (if (.exists cache-file)
       (slurp cache-file)
-      (do
-        (println (str "Downloading " file-name " from CDN..."))
-        (let [content (slurp url)]
-          (spit cache-file content)
-          content)))))
+      (let [content (slurp url)]
+        (spit cache-file content)
+        content))))
 
 ;; --- Core Parsing Logic ---
 
-(defn parse-slide-header
+(defn- parse-slide-header
   "Parses the slide header (e.g., '[template-id] Title')."
   [header-line]
   (if-let [[_ id title] (re-find #"^\[([\w\d-]+)\]\s*(.*)$" header-line)]
@@ -61,17 +58,15 @@
 ;; --- Validation Logic ---
 
 (defn- get-template-map [templates]
-  (into {} (map (juxt :slide-template identity) templates)))
+  (into {} (map (juxt :id identity) templates)))
 
 (defn validate-presentation-data
   [{:keys [meta slides] :as presentation-data}]
   (let [templates (:templates meta)]
     (when (empty? templates)
       (throw (ex-info "Validation Failed: No templates found." {})))
-
     (let [template-map (get-template-map templates)
-          default-id (-> templates first :slide-template)]
-
+          default-id (-> templates first :id)]
       (doseq [[i slide] (map-indexed vector slides)]
         (let [t-id (or (:template-id slide) default-id)
               template (get template-map t-id)]
@@ -85,14 +80,14 @@
                                    " blocks, but provided " provided ".") {}))))))))
   presentation-data)
 
-;; --- Media & Style Generation ---
+;; --- Media Generation ---
 
 (def mime-types
   {"png" "image/png" "jpg" "image/jpeg" "jpeg" "image/jpeg"
    "gif" "image/gif" "svg" "image/svg+xml" "webp" "image/webp"
    "mp4" "video/mp4" "webm" "video/webm" "ogg" "video/ogg"})
 
-(defn guess-mime-type [path]
+(defn- guess-mime-type [path]
   (let [ext (second (re-find #"\.([a-zA-Z0-9]+)$" path))]
     (get mime-types (str/lower-case (or ext "")) "application/octet-stream")))
 
@@ -104,25 +99,8 @@
       (io/copy in out)
       (.encodeToString (Base64/getEncoder) (.toByteArray out)))))
 
-(defn extract-image-path [block]
+(defn- extract-image-path [block]
   (or (second (re-find #"!\[.*\]\((.*?)\)" block)) block))
-
-(defn- build-css-gradient [{:keys [orientation layers]}]
-  (let [dir (if (= "vertical" orientation) "to right" "to bottom")
-        [stops] (reduce (fn [[acc cur] {:keys [color proportion]}]
-                          (let [p (Double/parseDouble (str/replace proportion "%" ""))
-                                next (+ cur p)]
-                            [(conj acc (str color " " cur "% " next "%")) next]))
-                        [[] 0.0]
-                        layers)]
-    (str "linear-gradient(" dir ", " (str/join ", " stops) ")")))
-
-(defn- build-position-style [{:keys [position style]}]
-  (str "position: absolute; "
-       (when (:x position) (str "left: " (:x position) "; "))
-       (when (:y position) (str "top: " (:y position) "; "))
-       (when (:color style) (str "color: " (:color style) "; "))
-       (when (:alignment style) (str "text-align: " (:alignment style) "; "))))
 
 ;; --- HTML Generation ---
 
@@ -133,57 +111,59 @@
     (conj (vec (map vector head-els head-bls))
           [last-el (str/join "\n\n" tail-bls)])))
 
-(defn pair-elements-with-blocks [elements blocks]
+(defn- pair-elements-with-blocks [elements blocks]
   (if (>= (count blocks) (count elements))
     (pair-greedy elements blocks)
     (map vector elements blocks)))
 
+(defn- wrap-element 
+  "Wraps the inner HTML in the standard content-element div."
+  [specific-class style inner-html]
+  (str "<div class=\"content-element " specific-class "\" "
+       "style=\"position: absolute; " (or style "") "\">"
+       inner-html
+       "</div>"))
+
 (defmulti render-slide-element (fn [element _ _] (:type element)))
 
 (defmethod render-slide-element "text" [element block _]
-  (let [style (build-position-style element)
-        html (md/md-to-html-string block :spec :gfm)]
-    (str "<div class=\"content-element text-content\" style=\"" style "\">"
-         (str/replace html #"<code class=\"(\w+)\">" "<code class=\"language-$1\">")
-         "</div>")))
+  (let [html (md/md-to-html-string block :spec :gfm)
+        fixed-html (str/replace html #"<code class=\"([^\"]+)\">" "<code class=\"language-$1\">")]
+    (wrap-element "text-content" (:style element) fixed-html)))
 
 (defmethod render-slide-element "image" [element block base-dir]
-  (let [style (build-position-style element)
-        path (extract-image-path block)
+  (let [path (extract-image-path block)
         mime (guess-mime-type path)
-        b64 (encode-file-to-base64 base-dir path)]
-    (str "<div class=\"content-element image-content\" style=\"" style "\">"
-         "<img src=\"data:" mime ";base64," b64 "\" alt=\"Embedded Image\"></div>")))
+        b64 (encode-file-to-base64 base-dir path)
+        img-tag (str "<img src=\"data:" mime ";base64," b64 "\" alt=\"Embedded Image\">")]
+    (wrap-element "image-content" (:style element) img-tag)))
 
 (defmethod render-slide-element "video" [element block base-dir]
-  (let [style (build-position-style element)
-        mime (guess-mime-type block)
+  (let [mime (guess-mime-type block)
         b64 (encode-file-to-base64 base-dir block)
-        opts (str (when-not (false? (:controls element)) "controls ")
-                  (when (:autoplay element) "autoplay muted"))]
-    (str "<div class=\"content-element video-content\" style=\"" style "\">"
-         "<video " opts " src=\"data:" mime ";base64," b64 "\"></video></div>")))
+        opts (str (when (:controls element true) "controls ")
+                  (when (:autoplay element) "autoplay muted"))
+        video-tag (str "<video " opts " src=\"data:" mime ";base64," b64 "\"></video>")]
+    (wrap-element "video-content" (:style element) video-tag)))
 
 (defmethod render-slide-element :default [element _ _]
-  (str "<div style=\"" (build-position-style element) "\">Unsupported: " (:type element) "</div>"))
+  (str "<div style=\"" (:style element) "\">Unsupported: " (:type element) "</div>"))
 
 (defn- generate-slide-content [template-elements markdown-blocks base-dir]
-  (str/join "\n" (for [[element block] (pair-elements-with-blocks template-elements markdown-blocks)
-                       :when block]
-                   (render-slide-element element block base-dir))))
+  (str/join "\n" (for [[el bl] (pair-elements-with-blocks template-elements markdown-blocks)
+                       :when bl]
+                   (render-slide-element el bl base-dir))))
 
 (defn- generate-slide-html [slide index template-map default-id base-dir]
   (let [template (get template-map (or (:template-id slide) default-id))
-        bg (build-css-gradient (:background template))]
-    (str "<div class=\"slide\" id=\"slide-" index "\" style=\"background: " bg ";\">"
+        bg-style (or (:style template) "background: #000")]
+    (str "<div class=\"slide\" id=\"slide-" index "\" style=\"" bg-style "\">"
          (generate-slide-content (:elements template) (:markdown-blocks slide) base-dir)
          "</div>")))
 
 (defn- generate-slide-options [slides]
-  (str/join "\n" (map-indexed (fn [i slide]
-                                (let [label (if (:title slide)
-                                              (str (inc i) " - " (:title slide))
-                                              (str (inc i)))]
+  (str/join "\n" (map-indexed (fn [i s]
+                                (let [label (str (inc i) (when (:title s) (str " - " (:title s))))]
                                   (str "<option value=\"" i "\">" label "</option>")))
                               slides)))
 
@@ -244,7 +224,7 @@
 
 (defn generate-html [{:keys [meta slides]} base-dir]
   (let [template-map (get-template-map (:templates meta))
-        default-id (-> meta :templates first :slide-template)]
+        default-id (-> meta :templates first :id)]
     (str "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\">"
          "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
          "<title>" (or (:title meta) "Presentation") "</title>"
@@ -257,7 +237,7 @@
          (str/join "\n" (map-indexed #(generate-slide-html %2 %1 template-map default-id base-dir) slides))
          "</div></div>" (generate-js (count slides)) "</body></html>")))
 
-(defn load-smd [file input-file]
+(defn smd->html [file input-file]
   (let [path (.getCanonicalPath file)
         output (str/replace input-file #"\.smd$" ".html")
         data (-> (slurp path) parse-smd-file validate-presentation-data)]
@@ -270,7 +250,7 @@
     (try
       (let [file (io/file input-file)]
         (if (.exists file)
-          (load-smd file input-file)
+          (smd->html file input-file)
           (println "Error: File not found.")))
       (catch Exception e (println "Error:" (.getMessage e)) (.printStackTrace e)))
     (println "Usage: ./slide-markdown.clj <input.smd>")))

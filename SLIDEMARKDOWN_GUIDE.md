@@ -1,151 +1,121 @@
 # Slide Markdown (.smd) Format Guide
 
-The `.smd` format is a custom file structure designed to create self-contained HTML presentations. It consists of two main parts separated by an `END` marker:
+The `.smd` file is a hybrid text format designed to separate **layout definition** (EDN) from **content authoring** (Markdown). It consists of two distinct sections separated by the keyword `END`.
 
-1.  **The EDN Header**: Defines metadata and templates.
-2.  **The Slide Content**: Markdown blocks for each slide.
+## 1. File Structure
 
----
-
-## 1. The EDN Header
-
-The file **must** begin with a Clojure EDN (Extensible Data Notation) map. This map defines the presentation's overall title and, most importantly, the slide templates.
-
-```clojure
-{:title "My Awesome Presentation"
- :templates [
-   {;; --- Template 1: Title Slide ---
-    :slide-template "title"
-    :template-name "TitleSlide_HorizontalSplit"
-    :background {:type "solid_layers"
-                 :orientation "horizontal"
-                 :layers [{:color "#0F9B8E" :proportion "33.3%"}
-                          {:color "#000000" :proportion "66.7%"}]}
-    :elements [{:type "text"
-                :role "#"
-                :style {:color "#FFFFFF", :alignment "left"}
-                :position {:x "5%", :y "40%"}}
-               
-               {:type "text"
-                :role "###"
-                :style {:color "#FFFFFF", :alignment "left"}
-                :position {:x "5%", :y "50%"}}]}
-
-   {;; --- Template 2: Two-Column Media ---
-    :slide-template "media-right"
-    :template-name "TwoColumn_VerticalSplit_Media"
-    :background {:type "solid_layers"
-                 :orientation "vertical"
-                 :layers [{:color "#FDFBF4" :proportion "50%"}
-                          {:color "#000000" :proportion "50%"}]}
-    :elements [{:type "text" ; Element 1
-                :role "#"
-                :style {:color "#0F9B8E", :alignment "left"}
-                :position {:x "5%", :y "15%"}}
-               
-               {:type "image" ; Element 2
-                :position {:x "5%", :y "25%"}}
-               
-               {:type "video" ; Element 3
-                :autoplay false
-                :controls true
-                :position {:x "55%", :y "15%"}}]}]}
+```text
+{ ... EDN Header (Configuration & Templates) ... }
+END
+-*-*- [template-id] Slide Title
+Markdown Content...
 ```
 
-### Template Keys:
+---
 
-* `:slide-template`: A **unique string ID** for this template.
-* `:template-name`: A human-readable name.
-* `:background`: Defines the background. Currently supports `:type "solid_layers"` with `:orientation ("horizontal" | "vertical")` and a vector of `:layers` (color and proportion).
-* `:elements`: A **vector** of content placeholders. The **order** of elements here is critical.
-    * `:type`: Can be `"text"`, `"image"`, or `"video"`.
-    * `:style`: (For `text`) Defines CSS properties like `:color` and `:alignment`.
-    * `:position`: Defines the absolute position using `:x` and `:y` (CSS percentages).
-    * `(video keys)`: `:autoplay` (boolean), `:controls` (boolean).
+## 2. The Header (EDN)
 
-### Default Template
+The top section is a Clojure EDN map defining global metadata and reusable slide layouts.
 
-The **first** template in the `:templates` vector (e.g., `:slide-template "title"` above) is the **default template**. It will be used for any slide that does not specify a template ID.
+### Top-Level Keys
+
+| Key | Type | Description |
+| :--- | :--- | :--- |
+| `:title` | String | The HTML page title (browser tab). |
+| `:templates` | Vector | A list of template maps defining layouts. |
+
+### Template Structure
+
+Each map inside `:templates` defines a layout.
+
+| Key | Type | Description |
+| :--- | :--- | :--- |
+| `:id` | String | **Required.** Unique identifier referenced in slides (e.g., `"split-view"`). |
+| `:style` | String | CSS string applied to the slide container. Primarily used for backgrounds. |
+| `:elements` | Vector | A list of content slots (maps) defining where content appears. |
+
+### Element Structure
+
+Each map inside `:elements` defines a slot for content.
+
+| Key | Type | Description |
+| :--- | :--- | :--- |
+| `:type` | String | `"text"`, `"image"`, or `"video"`. |
+| `:style` | String | CSS string for positioning and styling (e.g., `left: 10%; top: 5%; color: #333;`). **Note:** `position: absolute` is applied automatically by the engine. |
+| `:controls`| Boolean| *(Video only)* Show/Hide player controls. Default: `true`. |
+| `:autoplay`| Boolean| *(Video only)* Autoplay muted. Default: `false`. |
+
+#### Example Header
+
+```clojure
+{:title "My Presentation"
+ :templates [
+   {:id "default"
+    :style "background: #222"
+    :elements [{:type "text" 
+                :style "left: 5%; top: 10%; color: white; width: 90%"}]}
+                
+   {:id "split"
+    :style "background: linear-gradient(to right, #111 50%, #eee 50%)"
+    :elements [{:type "text" 
+                :style "left: 5%; top: 20%; width: 40%; color: white"}
+               {:type "image" 
+                :style "left: 55%; top: 20%; width: 40%"}]}]}
+```
 
 ---
 
-## 2. The `END` Separator
+## 3. The Separator
 
-After the EDN block, you **must** place `END` on its own line to separate the header from the slide content.
+The header and the body **must** be separated by the keyword `END` on its own line.
 
-```clojure
-} ; ... end of EDN map
+```text
 END
 ```
 
 ---
 
-## 3. The Slide Content
+## 4. The Body (Slides)
 
-Slides are separated by `-*-*-` on its own line.
+The body consists of slides separated by the delimiter `-*-*-`.
 
-```markdown
+### Slide Header Syntax
+Each slide begins with the delimiter line:
+
+```text
 -*-*- [template-id] Optional Slide Title
 ```
 
-* `[template-id]`: **Optional**. This is the `:slide-template` ID from the header (e.g., `[media-right]`). If omitted, the **default template** is used.
-* `Optional Slide Title`: **Optional**. If provided, this text is used in the navigation dropdown menu (e.g., "1 - Introduction").
+* **`[template-id]`**: Matches an `:id` defined in the header. If omitted, the **first** template defined in the header is used.
+* **`Optional Slide Title`**: Used for the navigation dropdown menu.
 
-### Content Block Mapping
+### Content Mapping (Blocks)
 
-The content for each slide is standard Markdown. The parser separates your content into **blocks** (separated by one or more blank lines).
+Content is written in standard Markdown (GFM). The parser splits your Markdown content into **blocks** based on **blank lines**. These blocks are then mapped to the template's `:elements` in order.
 
-These blocks are mapped **sequentially** to the `:elements` vector in the slide's template.
+1.  **First Block** -> Mapped to **Element 1**.
+2.  **Second Block** -> Mapped to **Element 2**.
+3.  ...
 
-**You must provide exactly one block for each element defined in the template.**
+#### The "Greedy" Last Element Rule
+If you provide more Markdown blocks than there are elements in the template, the **last element** becomes "greedy". It consumes its assigned block **plus** all remaining blocks, joining them with line breaks.
 
-#### Example:
-
-Given the `"title"` template (which expects 2 text elements):
-
-```clojure
-:elements [{:type "text"}
-           {:type "text"}]
-```
-
-The slide content **must** provide 2 blocks:
+### Example Slide Authoring
 
 ```markdown
--*-*- [title] Introduction
-# Density Experiment
-### By Your Name
+-*-*- [split] Text on Left, Image on Right
+# Hello World
+This text goes into the first element (left).
+
+<-- Blank Line Splits the Blocks -->
+
+![Alt Text](path/to/image.png)
+This image block goes into the second element (right).
 ```
 
-* `# Density Experiment` is **Block 1**. It maps to `Element 1`.
-* `### By Your Name` is **Block 2**. It maps to `Element 2`.
+### Supported Content
 
----
-
-Given the `"media-right"` template (expects `text`, `image`, `video`):
-
-```clojure
-:elements [{:type "text"}
-           {:type "image"}
-           {:type "video"}]
-```
-
-The slide content **must** provide 3 blocks:
-
-```markdown
--*-*- [media-right] The Experiment
-# Materials
-Found around the house!
-
-![Alt text for the image](./assets/my-image.png)
-
-./assets/my-video.mp4
-```
-
-* **Block 1 (Text):** `# Materials\nFound around the house!`
-* **Block 2 (Image):** `![Alt text for the image](./assets/my-image.png)`
-    * *Note: For images, you can use Markdown syntax `![alt](path)` or just the `path`.*
-* **Block 3 (Video):** `./assets/my-video.mp4`
-    * *Note: For videos, just provide the file path.*
-
-All media paths are relative to the location of the `.smd` file and will be "
-"embedded (Base64) into the final HTML.
+* **Text:** Headers (`#`), Lists (`*`, `-`), Bold/Italic, Links.
+* **Code:** Triple backticks (```` ```clojure ... ``` ````). PrismJS syntax highlighting is applied automatically.
+* **Images:** Standard Markdown syntax `![alt](url)`.
+* **Videos:** Raw file path (e.g., `assets/demo.mp4`) passed to a `:type "video"` element.

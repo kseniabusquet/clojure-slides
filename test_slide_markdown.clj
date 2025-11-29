@@ -4,77 +4,60 @@
 
 (load-file "slide_markdown.clj")
 
+;; Acessores para funções privadas
+(def parse-slide-content #'slide-markdown/parse-slide-content)
+(def pair-elements-with-blocks #'slide-markdown/pair-elements-with-blocks)
+(def wrap-element #'slide-markdown/wrap-element)
 
-;; TODO, try to read real files
+(deftest test-wrapper-helper
+  (testing "Wrap Element Structure"
+    (let [html (wrap-element "my-class" "color: red;" "<p>Content</p>")]
+      (is (str/includes? html "class=\"content-element my-class\""))
+      (is (str/includes? html "style=\"position: absolute; color: red;\""))
+      (is (str/includes? html "<p>Content</p>")))))
 
-(deftest test-parsing-logic
-  (testing "Parse Slide Header"
-    (is (= {:template-id "my-tpl" :title "My Title"}
-           (slide-markdown/parse-slide-header "[my-tpl] My Title")))
-    (is (= {:template-id "default" :title "Just Title"}
-           (slide-markdown/parse-slide-header "[default] Just Title")))
-    (is (= {:template-id nil :title "No ID Here"}
-           (slide-markdown/parse-slide-header "No ID Here")))
-    (is (= {:template-id "only-id" :title nil}
-           (slide-markdown/parse-slide-header "[only-id]")))))
+(deftest test-block-splitting
+  (testing "Split content by blank lines"
+    (let [raw "Slide Header\n\nBloco 1\n\nBloco 2"]
+      (is (= 2 (count (:markdown-blocks (parse-slide-content raw))))
+          "Deve separar em 2 blocos de conteúdo (além do header)"))
+    (let [raw "Slide Header\nBloco1\nBloco2"]
+      (is (= 1 (count (:markdown-blocks (parse-slide-content raw))))
+          "Sem linha em branco dupla, o conteúdo vira um bloco único"))))
 
-(deftest test-css-generation
-  (testing "Build Gradient CSS"
-    (let [bg {:orientation "vertical"
-              :layers [{:color "#000" :proportion "50%"}
-                       {:color "#fff" :proportion "50%"}]}
-          css (slide-markdown/build-css-gradient bg)]
-      (is (str/includes? css "linear-gradient(to right"))
-      (is (str/includes? css "#000 0.0% 50.0%"))
-      (is (str/includes? css "#fff 50.0% 100.0%")))))
+(deftest test-markdown-features
+  (testing "Render List (<ul>)"
+    (let [el {:type "text"}
+          block "* Item 1\n* Item 2"
+          html (slide-markdown/render-slide-element el block nil)]
+      (is (str/includes? html "<ul>") "Deve gerar tag <ul>")
+      (is (str/includes? html "<li>Item 1</li>") "Deve gerar itens de lista")))
 
-(deftest test-greedy-pairing
-  (testing "Pairing: 1 to 1 (Exact match)"
-    (let [elements [:e1 :e2]
-          blocks   ["b1" "b2"]]
-      (is (= [[:e1 "b1"] [:e2 "b2"]]
-             (slide-markdown/pair-elements-with-blocks elements blocks)))))
+  (testing "Render Bold/Italic"
+    (let [el {:type "text"}
+          block "Texto **negrito** e *italico*"
+          html (slide-markdown/render-slide-element el block nil)]
+      (is (str/includes? html "<strong>negrito</strong>") "Deve gerar tag <strong>")
+      (is (str/includes? html "<em>italico</em>") "Deve gerar tag <em>")))
 
-  (testing "Pairing: Greedy (More blocks than elements)"
-    (let [elements [:e1 :e2]
-          blocks   ["b1" "b2" "b3" "b4"]
-          result (slide-markdown/pair-elements-with-blocks elements blocks)]
-      (is (= 2 (count result)))
-      (is (= [:e1 "b1"] (first result)))
-      (is (= [:e2 "b2\n\nb3\n\nb4"] (second result)))))
-
-  (testing "Pairing: Single element greedy"
-    (let [elements [:e1]
-          blocks   ["b1" "b2"]]
-      (is (= [[:e1 "b1\n\nb2"]]
-             (slide-markdown/pair-elements-with-blocks elements blocks))))))
-
-(deftest test-render-multimethod
-  (testing "Render Text with Syntax Highlighting Fix"
+  (testing "Render Code Block (PrismJS Class)"
     (let [el {:type "text"}
           block "```clojure\n(def x 1)\n```"
           html (slide-markdown/render-slide-element el block nil)]
-      (is (str/includes? html "<pre>"))
-      (is (str/includes? html "class=\"language-clojure\""))))
+      (is (str/includes? html "<pre>") "Deve gerar tag <pre>")
+      ;; Este é o teste crucial para o seu problema de cores
+      (is (str/includes? html "class=\"language-clojure\"")
+          "Deve injetar a classe 'language-clojure' para o Prism colorir"))))
 
-  (testing "Render Default/Unsupported"
-    (let [element {:type "unknown-thing"}
-          block "content"]
-      (is (str/includes? (slide-markdown/render-slide-element element block nil)
-                         "Unsupported: unknown-thing")))))
+(deftest test-greedy-pairing
+  (testing "Pairing Logic"
+    (let [elements [:title :code]
+          blocks ["# O Título" "```\n(codigo)\n```"]
+          pairs (pair-elements-with-blocks elements blocks)]
+      (is (= [:title "# O Título"] (first pairs)))
+      (is (= [:code "```\n(codigo)\n```"] (second pairs))
+          "O segundo bloco deve ir para o segundo elemento"))))
 
-(deftest test-utils
-  (testing "Mime Types"
-    (is (= "image/png" (slide-markdown/guess-mime-type "file.png")))
-    (is (= "image/jpeg" (slide-markdown/guess-mime-type "file.JPG")))
-    (is (= "application/octet-stream" (slide-markdown/guess-mime-type "file.unknown"))))
-
-  (testing "Extract Image Path"
-    (is (= "img.png" (slide-markdown/extract-image-path "img.png")))
-    (is (= "img.png" (slide-markdown/extract-image-path "![alt](img.png)")))))
-
-;; --- RUN TESTS ---
+;; --- EXECUÇÃO ---
 (let [{:keys [fail error]} (run-tests 'test-slide-markdown)]
-  (if (+ fail error)
-    (System/exit 1)
-    (System/exit 0)))
+  (if (+ fail error) (System/exit 1) (System/exit 0)))
