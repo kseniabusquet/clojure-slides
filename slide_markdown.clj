@@ -34,7 +34,7 @@
     {:template-id nil
      :title (when-not (str/blank? header-line) header-line)}))
 
-(defn- parse-slide-content
+(defn parse-slide-content
   "Parses a raw slide string into a structured map."
   [raw-slide]
   (let [[header-line & rest-lines] (str/split-lines raw-slide)
@@ -111,12 +111,12 @@
     (conj (vec (map vector head-els head-bls))
           [last-el (str/join "\n\n" tail-bls)])))
 
-(defn- pair-elements-with-blocks [elements blocks]
+(defn pair-elements-with-blocks [elements blocks]
   (if (>= (count blocks) (count elements))
     (pair-greedy elements blocks)
     (map vector elements blocks)))
 
-(defn- wrap-element 
+(defn wrap-element 
   "Wraps the inner HTML in the standard content-element div."
   [specific-class style inner-html]
   (str "<div class=\"content-element " specific-class "\" "
