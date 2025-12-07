@@ -1,6 +1,4 @@
-#!/usr/bin/env bb
 (ns slide-markdown
-  "Converts a .smd (Slide Markdown) file into a self-contained HTML presentation."
   (:require [clojure.edn :as edn]
             [clojure.string :as str]
             [clojure.java.io :as io]
@@ -87,7 +85,7 @@
    "gif" "image/gif" "svg" "image/svg+xml" "webp" "image/webp"
    "mp4" "video/mp4" "webm" "video/webm" "ogg" "video/ogg"})
 
-(defn- guess-mime-type [path]
+(defn- get-mime-type [path]
   (let [ext (second (re-find #"\.([a-zA-Z0-9]+)$" path))]
     (get mime-types (str/lower-case (or ext "")) "application/octet-stream")))
 
@@ -116,7 +114,7 @@
     (pair-greedy elements blocks)
     (map vector elements blocks)))
 
-(defn wrap-element 
+(defn wrap-element
   "Wraps the inner HTML in the standard content-element div."
   [specific-class style inner-html]
   (str "<div class=\"content-element " specific-class "\" "
@@ -133,13 +131,13 @@
 
 (defmethod render-slide-element "image" [element block base-dir]
   (let [path (extract-image-path block)
-        mime (guess-mime-type path)
+        mime (get-mime-type path)
         b64 (encode-file-to-base64 base-dir path)
         img-tag (str "<img src=\"data:" mime ";base64," b64 "\" alt=\"Embedded Image\">")]
     (wrap-element "image-content" (:style element) img-tag)))
 
 (defmethod render-slide-element "video" [element block base-dir]
-  (let [mime (guess-mime-type block)
+  (let [mime (get-mime-type block)
         b64 (encode-file-to-base64 base-dir block)
         opts (str (when (:controls element true) "controls ")
                   (when (:autoplay element) "autoplay muted"))

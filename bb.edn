@@ -1,2 +1,7 @@
-{:deps
- {markdown-clj/markdown-clj {:mvn/version "1.12.1"}}}
+{:paths ["src" "test"]
+ :deps {markdown-clj/markdown-clj {:mvn/version "1.12.1"}}
+ :tasks {test {:doc "Run all tests"
+               :task (doseq [test-file (->> (file-seq (clojure.java.io/file "test"))
+                                            (map str)
+                                            (filter (fn [f] (clojure.string/ends-with? f "_test.clj"))))]
+                       (load-file test-file))}}}

@@ -1,8 +1,7 @@
-(ns test-slide-markdown
+(ns slide-markdown-test
   (:require [clojure.test :refer [deftest is testing run-tests]]
-            [clojure.string :as str]))
-
-(load-file "slide_markdown.clj")
+            [clojure.string :as str]
+            [slide-markdown]))
 
 (deftest test-wrapper-helper
   (testing "Wrap Element Structure"
@@ -52,5 +51,5 @@
       (is (= [:code "```\n(codigo)\n```"] (second pairs))
           "O segundo bloco deve ir para o segundo elemento"))))
 
-(let [{:keys [fail error]} (run-tests 'test-slide-markdown)]
+(let [{:keys [fail error]} (run-tests 'slide-markdown-test)]
   (if (+ fail error) (System/exit 1) (System/exit 0)))
