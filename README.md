@@ -54,6 +54,43 @@ bb slide_markdown.clj apresentacao.smd
 
 **Nota:** Na primeira execução, a ferramenta requer uma conexão com a internet para baixar os temas e scripts do Prism.js para uma pasta local `.slide-cache`. Execuções subsequentes funcionam offline.
 
+## Desenvolvimento Live com Babashka
+
+Para um fluxo de desenvolvimento mais fluido, use os seguintes comandos Babashka:
+
+### Comandos Disponíveis
+
+```bash
+# Executar testes
+bb test
+
+# Monitorar arquivo .smd e regenerar HTML automaticamente
+bb watch apresentacao.smd
+
+# Iniciar servidor HTTP Clojure para servir os slides
+bb serve [porta]  # padrão: 8080
+```
+
+### Fluxo de Desenvolvimento Live
+
+**Terminal 1** (Monitoramento de Arquivos):
+```bash
+bb watch apresentacao.smd
+```
+- Monitora mudanças no arquivo `.smd`
+- Regenera automaticamente o HTML quando salvar
+- Mostra mensagens de sucesso/erro com emojis coloridos
+
+**Terminal 2** (Servidor HTTP Clojure):
+```bash
+bb serve 8080
+```
+- Inicia servidor HTTP nativo em Clojure
+- Serve arquivos em `http://localhost:8080`
+- Log de requisições com informações detalhadas
+
+**Navegador:** Abra `http://localhost:8080/apresentacao.html`
+
 ## Formato do Arquivo .smd
 
 > **Para informações detalhadas sobre o formato:** Consulte o [Guia do Formato SMD](SMD_FORMAT_GUIDE.md)
