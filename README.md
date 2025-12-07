@@ -1,152 +1,169 @@
 # SlideMD (Slide Markdown)
 
-**SlideMD** is a lightweight, command-line tool written in Clojure (running on Babashka) that converts a custom text format (`.smd`) into a **self-contained, single-file HTML presentation**.
+> **English version available:** [README_en.md](README_en.md)
 
-It is designed for developers who want to write presentations in Markdown, define layouts using standard CSS within EDN data, and share a single HTML file that works offline without dependencies.
+## Sobre
 
-## ✨ Features
+**SlideMD** é uma ferramenta leve de linha de comando escrita em Clojure (rodando no Babashka) que converte um formato de texto customizado (`.smd`) em uma **apresentação HTML autocontida em arquivo único**.
 
-* **Self-Contained Output:** Images (Base64), CSS, and JavaScript are embedded directly into the HTML. No external folders required to present.
-* **Markdown Support:** Full GFM (GitHub Flavored Markdown) support, including tables, lists, and images.
-* **CSS-Based Templates:** Define slide layouts using standard CSS. No complex custom layout engines—just use styles you already know.
-* **Syntax Highlighting:** Automatic syntax highlighting for code blocks using Prism.js (cached locally).
-* **Responsive:** Slides scale automatically using viewport units (`vh`), looking good on any screen size.
-* **Developer Friendly:** Written in Clojure, powered by Babashka.
+É projetada para desenvolvedores que querem escrever apresentações em Markdown, definir layouts usando CSS padrão dentro de dados EDN, e compartilhar um único arquivo HTML que funciona offline sem dependências.
 
-## 🚀 Prerequisites
+## Funcionalidades
 
-You need **Babashka** installed to run this tool.
+* **Saída Autocontida:** Imagens (Base64), CSS e JavaScript são incorporados diretamente no HTML. Não são necessárias pastas externas para apresentar.
+* **Suporte ao Markdown:** Suporte completo ao GFM (GitHub Flavored Markdown), incluindo tabelas, listas e imagens.
+* **Templates Baseados em CSS:** Defina layouts de slides usando CSS padrão. Sem engines complexos de layout customizado—apenas use estilos que você já conhece.
+* **Destaque de Sintaxe:** Destaque automático de sintaxe para blocos de código usando Prism.js (armazenado localmente).
+* **Responsivo:** Slides escalam automaticamente usando unidades de viewport (`vh`), ficando bem em qualquer tamanho de tela.
+* **Amigável ao Desenvolvedor:** Escrito em Clojure, alimentado pelo Babashka.
 
-* [Install Babashka](https://github.com/babashka/babashka#installation)
-    * macOS: `brew install borkdude/brew/babashka`
-    * Linux: `bash < <(curl -s https://raw.githubusercontent.com/babashka/babashka/master/install)`
-    * Windows: `scoop install babashka`
+## Pré-requisitos
 
-## 🏃 Usage
+Você precisa do **Babashka** instalado para executar esta ferramenta.
 
-1.  Create your `.smd` file (e.g., `presentation.smd`).
-2.  Run the script:
+* [Instalar Babashka](https://github.com/babashka/babashka#installation)
+    * macOS:
+      ```bash
+      brew install borkdude/brew/babashka
+      ```
+    * Linux:
+      ```bash
+      curl -sLO https://raw.githubusercontent.com/babashka/babashka/master/install
+      chmod +x install
+      sudo ./install
+      ```
+    * Windows:
+      ```bash
+      scoop install babashka
+      ```
+
+## Como Usar
+
+1.  Crie seu arquivo `.smd` (ex: `apresentacao.smd`).
+2.  Execute o script:
 
 ```bash
-# If you set up a bb.edn (Recommended)
-bb slide_markdown.clj presentation.smd
+# Se você configurou um bb.edn (Recomendado)
+bb slide_markdown.clj apresentacao.smd
 
-# Or running directly
-./slide_markdown.clj presentation.smd
+# Ou executando diretamente
+./slide_markdown.clj apresentacao.smd
 ```
 
-3.  Open the generated `presentation.html` in your browser.
+3.  Abra o `apresentacao.html` gerado no seu navegador.
 
-**Note:** On the first run, the tool requires an internet connection to download the Prism.js themes and scripts to a local `.slide-cache` folder. Subsequent runs work offline.
+**Nota:** Na primeira execução, a ferramenta requer uma conexão com a internet para baixar os temas e scripts do Prism.js para uma pasta local `.slide-cache`. Execuções subsequentes funcionam offline.
 
-## 📄 The `.smd` File Format
+## Formato do Arquivo .smd
 
-The `.smd` file is a hybrid format split into two parts separated by the keyword `END`.
+> **Para informações detalhadas sobre o formato:** Consulte o [Guia do Formato SMD](SMD_FORMAT_GUIDE.md)
 
-1.  **Header (EDN):** Configuration and Template definitions.
-2.  **Body (Markdown):** The actual slide content.
+O arquivo `.smd` é um formato híbrido dividido em duas partes separadas pela palavra-chave `END`.
 
-### Structure Example
+1.  **Cabeçalho (EDN):** Configuração e definições de Template.
+2.  **Corpo (Markdown):** O conteúdo real dos slides.
+
+### Exemplo de Estrutura
 
 ```clojure
-{:title "My Awesome Talk"
+{:title "Minha Apresentação Incrível"
  :templates [
    {:id "default"
     :style "background: #333; color: white"
-    :elements [{:type "text" 
+    :elements [{:type "text"
                 :style "left: 5%; top: 10%; width: 90%"}]}
-   
+
    {:id "split"
     :style "background: linear-gradient(to right, #222 50%, #eee 50%)"
     :elements [{:type "text" :style "left: 5%; top: 20%; width: 40%"}
                {:type "image" :style "left: 55%; top: 20%; width: 40%"}]}]}
 END
--*-*- [default] First Slide Title
-# Hello World
+-*-*- [default] Título do Primeiro Slide
+# Olá Mundo
 
-This is the body content.
+Este é o conteúdo do corpo.
 ```
 
 ---
 
-## 🎨 Creating Templates (Header)
+## Criando Templates (Cabeçalho)
 
-Templates are defined in the `:templates` vector in the header.
+Templates são definidos no vetor `:templates` no cabeçalho.
 
-### Template Structure
-Each map in `:templates` defines a layout:
+### Estrutura do Template
+Cada map em `:templates` define um layout:
 
-* `:id`: **Required.** Unique identifier referenced in slides (e.g., `"split-view"`).
-* `:style`: **Optional.** CSS string applied to the slide container. Primarily used for backgrounds (colors, gradients, or images).
-* `:elements`: **Required.** A vector of content slots.
+* `:id`: **Obrigatório.** Identificador único referenciado nos slides (ex: `"split-view"`).
+* `:style`: **Opcional.** String CSS aplicada ao contêiner do slide. Usado principalmente para backgrounds (cores, gradientes ou imagens).
+* `:elements`: **Obrigatório.** Um vetor de slots de conteúdo.
 
-### Element Structure
-Each map in `:elements` defines a slot where Markdown content will be injected:
+### Estrutura do Elemento
+Cada map em `:elements` define um slot onde o conteúdo Markdown será injetado:
 
-* `:type`: `"text"`, `"image"`, or `"video"`.
-* `:style`: CSS string for positioning and styling.
-    * **Note:** The engine automatically applies `position: absolute`. You should define `top`, `left`, `width`, `color`, etc.
-* `:controls`: *(Video only)* Boolean to show/hide player controls. Default: `true`.
-* `:autoplay`: *(Video only)* Boolean to autoplay muted. Default: `false`.
+* `:type`: `"text"`, `"image"`, ou `"video"`.
+* `:style`: String CSS para posicionamento e estilização.
+    * **Nota:** O engine aplica automaticamente `position: absolute`. Você deve definir `top`, `left`, `width`, `color`, etc.
+* `:controls`: *(Apenas vídeo)* Boolean para mostrar/ocultar controles do player. Padrão: `true`.
+* `:autoplay`: *(Apenas vídeo)* Boolean para autoplay silenciado. Padrão: `false`.
 
 ---
 
-## ✍️ Writing Slides (Body)
+## Escrevendo Slides (Corpo)
 
-Slides are separated by the marker `-*-*-`.
+Slides são separados pelo marcador `-*-*-`.
 
-### Slide Header Syntax
-Each slide starts with the delimiter line:
+### Sintaxe do Cabeçalho do Slide
+Cada slide começa com a linha delimitadora:
 
 ```text
--*-*- [template-id] Optional Slide Title
+-*-*- [template-id] Título Opcional do Slide
 ```
 
-* `[template-id]`: Must match an `:id` defined in the header. If omitted, the **first** template defined in the header is used.
-* `Optional Slide Title`: Appears in the browser navigation dropdown.
+* `[template-id]`: Deve corresponder a um `:id` definido no cabeçalho. Se omitido, o **primeiro** template definido no cabeçalho é usado.
+* `Título Opcional do Slide`: Aparece no dropdown de navegação do navegador.
 
-### Content Mapping (The Block System)
-The parser splits your Markdown content into **blocks** based on **blank lines**. These blocks are then mapped to the template's `:elements` in sequential order.
+### Mapeamento de Conteúdo (O Sistema de Blocos)
+O parser divide seu conteúdo Markdown em **blocos** baseado em **linhas em branco**. Esses blocos são então mapeados para os `:elements` do template em ordem sequencial.
 
-1.  **First Block** -> Mapped to **Element 1**.
-2.  **Second Block** -> Mapped to **Element 2**.
-3.  And so on...
+1.  **Primeiro Bloco** -> Mapeado para **Elemento 1**.
+2.  **Segundo Bloco** -> Mapeado para **Elemento 2**.
+3.  E assim por diante...
 
-**Example:**
+**Exemplo:**
 
 ```markdown
--*-*- [split] Comparison Slide
-# Left Column Content
-This text goes to the first element defined in the 'split' template.
+-*-*- [split] Slide de Comparação
+# Conteúdo da Coluna Esquerda
+Este texto vai para o primeiro elemento definido no template 'split'.
 
-<-- Blank Line is CRITICAL to separate blocks -->
+<-- Linha em Branco é CRÍTICA para separar blocos -->
 
-![Image](path/to/image.png)
-This image block goes to the second element.
+![Imagem](caminho/para/imagem.png)
+Este bloco de imagem vai para o segundo elemento.
 ```
 
-### The "Greedy" Last Element Rule
-If you provide more Markdown blocks than there are elements in the template, the **last element** becomes "greedy". It consumes its assigned block **plus** all remaining blocks, joining them with line breaks.
+### A Regra do Último Elemento "Ganancioso"
+Se você fornecer mais blocos Markdown do que há elementos no template, o **último elemento** se torna "ganancioso". Ele consome seu bloco atribuído **mais** todos os blocos restantes, juntando-os com quebras de linha.
 
-### Supported Content
-* **Text:** Headers, Lists, Bold, Italic, Blockquotes.
-* **Code:** Triple backticks (```` ```clojure ... ``` ````). PrismJS syntax highlighting is applied automatically.
-* **Images:** Standard Markdown syntax `![alt](path)`.
-* **Videos:** Raw file path (e.g., `assets/demo.mp4`) passed to a `:type "video"` element.
+### Conteúdo Suportado
+* **Texto:** Cabeçalhos, Listas, Negrito, Itálico, Citações.
+* **Código:** Três crases (```` ```clojure ... ``` ````). O destaque de sintaxe do PrismJS é aplicado automaticamente.
+* **Imagens:** Sintaxe padrão do Markdown `![alt](caminho)`.
+* **Vídeos:** Caminho de arquivo bruto (ex: `assets/demo.mp4`) passado para um elemento `:type "video"`.
 
 ---
 
-## ⌨️ Keyboard Shortcuts (Presentation Mode)
+## Atalhos do Teclado
 
-* `Arrow Right` / `Space`: Next Slide
-* `Arrow Left`: Previous Slide
-* `F` / Button: Toggle Fullscreen
+* `Seta Direita` / `Espaço`: Próximo Slide
+* `Seta Esquerda`: Slide Anterior
+* `F` / Botão: Alternar Tela Cheia
 
-## 🛠 Troubleshooting
+## Solução de Problemas
 
-* **Colors/Theme not showing?**
-    Try clearing the cache if you suspect a corrupted download: `rm -r .slide-cache`.
-* **Code blocks merged with titles?**
-    Ensure you have a **blank line** between your header text and your ` ``` ` code block. Without a blank line, the parser treats them as a single block.
-* **Validation Errors?**
-    The script validates that you provided enough content blocks for the chosen template. Ensure you use blank lines to separate your Markdown content correctly.
+* **Cores/Tema não aparecendo?**
+    Tente limpar o cache se suspeitar de um download corrompido: `rm -r .slide-cache`.
+* **Blocos de código mesclados com títulos?**
+    Certifique-se de ter uma **linha em branco** entre seu texto de cabeçalho e seu bloco de código ` ``` `. Sem uma linha em branco, o parser os trata como um único bloco.
+* **Erros de Validação?**
+    O script valida que você forneceu blocos de conteúdo suficientes para o template escolhido. Certifique-se de usar linhas em branco para separar seu conteúdo Markdown corretamente.
