@@ -69,6 +69,9 @@ bb watch apresentacao.smd
 
 # Iniciar servidor HTTP Clojure com live reload
 bb serve [porta] [arquivo.smd]  # porta padrão: 8080
+
+# Iniciar REPL
+bb --nrepl-server [porta]
 ```
 
 ### Fluxo de Desenvolvimento Live

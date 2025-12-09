@@ -69,6 +69,9 @@ bb watch presentation.smd
 
 # Start Clojure HTTP server with live reload
 bb serve [port] [file.smd]  # default port: 8080
+
+# Start REPL
+bb --nrepl-server [port]
 ```
 
 ### Live Development Workflow
