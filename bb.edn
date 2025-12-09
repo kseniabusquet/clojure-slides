@@ -27,6 +27,6 @@
                               (recur last-modified)))))}
 
          serve {:doc "🚀 Start Clojure HTTP server with live reload"
-                :task (shell "bb" "-f" "src/live_reload_server.clj"
+                :task (shell "bb" "-f" "src/http_server.clj"
                             (or (first *command-line-args*) "8080")
                             (second *command-line-args*))}}}

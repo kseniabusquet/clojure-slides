@@ -192,12 +192,56 @@
           const select = document.getElementById('slide-select');
           const menu = document.getElementById('nav-menu');
           let timer;
+          const STORAGE_KEY = 'slide-md-current-slide';
+
+          // Save slide position to localStorage and URL hash
+          function saveSlidePosition(idx) {
+            try {
+              localStorage.setItem(STORAGE_KEY, idx.toString());
+              // Update hash without triggering navigation
+              if (window.history && window.history.replaceState) {
+                window.history.replaceState(null, '', '#slide-' + idx);
+              } else {
+                window.location.hash = 'slide-' + idx;
+              }
+            } catch (e) {
+              // localStorage might not be available
+            }
+          }
+
+          // Save position before page unload
+          window.addEventListener('beforeunload', () => {
+            saveSlidePosition(currentSlide);
+          });
+
+          // Restore slide position from URL hash or localStorage
+          function getSavedSlidePosition() {
+            // First check URL hash
+            const hashMatch = window.location.hash.match(/slide-(\\d+)/);
+            if (hashMatch) {
+              const idx = parseInt(hashMatch[1], 10);
+              if (idx >= 0 && idx < total) return idx;
+            }
+            // Fall back to localStorage
+            try {
+              const saved = localStorage.getItem(STORAGE_KEY);
+              if (saved !== null) {
+                const idx = parseInt(saved, 10);
+                if (idx >= 0 && idx < total) return idx;
+              }
+            } catch (e) {
+              // localStorage might not be available
+            }
+            return 0;
+          }
+
           function show(idx) {
             if (idx < 0 || idx >= total) return;
             slides[currentSlide].classList.remove('active');
             currentSlide = idx;
             slides[currentSlide].classList.add('active');
             if (select) select.value = currentSlide;
+            saveSlidePosition(currentSlide);
           }
           function next() { show(currentSlide + 1); }
           function prev() { show(currentSlide - 1); }
@@ -217,7 +261,21 @@
             (!document.fullscreenElement) ? document.documentElement.requestFullscreen() : document.exitFullscreen();
           });
           select.addEventListener('change', e => show(parseInt(e.target.value)));
-          show(0); menuVis(); Prism.highlightAll();
+
+          // Handle hash changes (e.g., browser back/forward)
+          window.addEventListener('hashchange', () => {
+            const saved = getSavedSlidePosition();
+            if (saved !== currentSlide) {
+              show(saved);
+            }
+          });
+
+          // Restore saved position on load (after a small delay to ensure DOM is ready)
+          setTimeout(() => {
+            show(getSavedSlidePosition());
+          }, 0);
+          menuVis();
+          Prism.highlightAll();
          </script>")))
 
 (defn generate-html [{:keys [meta slides]} base-dir]

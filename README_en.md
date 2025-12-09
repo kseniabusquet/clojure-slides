@@ -67,11 +67,31 @@ bb test
 # Watch .smd file and auto-regenerate HTML
 bb watch presentation.smd
 
-# Start Clojure HTTP server to serve slides
-bb serve [port]  # default: 8080
+# Start Clojure HTTP server with live reload
+bb serve [port] [file.smd]  # default port: 8080
 ```
 
 ### Live Development Workflow
+
+**Option 1: Server with Automatic Live Reload (Recommended)**
+```bash
+bb serve 8080 presentation.smd
+```
+- Starts native Clojure HTTP server
+- Serves files at `http://localhost:8080`
+- **Automatic live reload:** Browser automatically refreshes when:
+  - The `.smd` file is modified (regenerates HTML and reloads)
+  - HTML files are modified directly
+- Request logging with detailed information
+
+**Option 2: Server for HTML Only (without .smd)**
+```bash
+bb serve 8080
+```
+- Serves HTML files at `http://localhost:8080`
+- Automatic live reload for HTML files
+
+**Option 3: Two Terminals (Alternative Workflow)**
 
 **Terminal 1** (File Watching):
 ```bash
@@ -81,13 +101,13 @@ bb watch presentation.smd
 - Automatically regenerates HTML on save
 - Shows success/error messages with colorful emojis
 
-**Terminal 2** (Clojure HTTP Server):
+**Terminal 2** (HTTP Server):
 ```bash
 bb serve 8080
 ```
 - Starts native Clojure HTTP server
 - Serves files at `http://localhost:8080`
-- Request logging with detailed information
+- Automatic live reload for HTML files
 
 **Browser:** Open `http://localhost:8080/presentation.html`
 
@@ -204,3 +224,10 @@ If you provide more Markdown blocks than there are elements in the template, the
     Ensure you have a **blank line** between your header text and your ` ``` ` code block. Without a blank line, the parser treats them as a single block.
 * **Validation Errors?**
     The script validates that you provided enough content blocks for the chosen template. Ensure you use blank lines to separate your Markdown content correctly.
+* **Live reload not working?**
+    - Make sure the server is running with `bb serve [port] [file.smd]`
+    - Check the browser console for live reload messages
+    - Live reload works automatically for HTML files served by the server
+    - If using a `.smd` file, pass it as the second argument: `bb serve 8080 presentation.smd`
+* **Port already in use?**
+    The server will show a clear error message. Choose a different port: `bb serve 3000 presentation.smd`

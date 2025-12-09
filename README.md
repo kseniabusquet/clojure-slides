@@ -67,11 +67,31 @@ bb test
 # Monitorar arquivo .smd e regenerar HTML automaticamente
 bb watch apresentacao.smd
 
-# Iniciar servidor HTTP Clojure para servir os slides
-bb serve [porta]  # padrão: 8080
+# Iniciar servidor HTTP Clojure com live reload
+bb serve [porta] [arquivo.smd]  # porta padrão: 8080
 ```
 
 ### Fluxo de Desenvolvimento Live
+
+**Opção 1: Servidor com Live Reload Automático (Recomendado)**
+```bash
+bb serve 3000 apresentacao.smd
+```
+- Inicia servidor HTTP nativo em Clojure
+- Serve arquivos em `http://localhost:8080`
+- **Live reload automático:** O navegador recarrega automaticamente quando:
+  - O arquivo `.smd` é modificado (regenera HTML e recarrega)
+  - Arquivos HTML são modificados diretamente
+- Log de requisições com informações detalhadas
+
+**Opção 2: Servidor Apenas para HTML (sem .smd)**
+```bash
+bb serve 3000
+```
+- Serve arquivos HTML em `http://localhost:8080`
+- Live reload automático para arquivos HTML
+
+**Opção 3: Dois Terminais (Workflow Alternativo)**
 
 **Terminal 1** (Monitoramento de Arquivos):
 ```bash
@@ -81,13 +101,13 @@ bb watch apresentacao.smd
 - Regenera automaticamente o HTML quando salvar
 - Mostra mensagens de sucesso/erro com emojis coloridos
 
-**Terminal 2** (Servidor HTTP Clojure):
+**Terminal 2** (Servidor HTTP):
 ```bash
 bb serve 8080
 ```
 - Inicia servidor HTTP nativo em Clojure
 - Serve arquivos em `http://localhost:8080`
-- Log de requisições com informações detalhadas
+- Live reload automático para arquivos HTML
 
 **Navegador:** Abra `http://localhost:8080/apresentacao.html`
 
@@ -204,3 +224,10 @@ Se você fornecer mais blocos Markdown do que há elementos no template, o **úl
     Certifique-se de ter uma **linha em branco** entre seu texto de cabeçalho e seu bloco de código ` ``` `. Sem uma linha em branco, o parser os trata como um único bloco.
 * **Erros de Validação?**
     O script valida que você forneceu blocos de conteúdo suficientes para o template escolhido. Certifique-se de usar linhas em branco para separar seu conteúdo Markdown corretamente.
+* **Live reload não está funcionando?**
+    - Certifique-se de que o servidor está rodando com `bb serve [porta] [arquivo.smd]`
+    - Verifique o console do navegador para mensagens de live reload
+    - O live reload funciona automaticamente para arquivos HTML servidos pelo servidor
+    - Se estiver usando um arquivo `.smd`, passe-o como segundo argumento: `bb serve 8080 apresentacao.smd`
+* **Porta já está em uso?**
+    O servidor mostrará uma mensagem de erro clara. Escolha uma porta diferente: `bb serve 3000 apresentacao.smd`
