@@ -1,5 +1,7 @@
-{:paths ["src" "test"]
- :deps {markdown-clj/markdown-clj {:mvn/version "1.12.1"}}
+{:paths ["src" "test" "scripts"]
+ :deps {markdown-clj/markdown-clj {:mvn/version "1.12.1"}
+        clj-http/clj-http {:mvn/version "3.12.3"}
+        cheshire/cheshire {:mvn/version "5.12.0"}}
  :tasks {test {:doc "Run all tests"
                :task (doseq [test-file (->> (file-seq (clojure.java.io/file "test"))
                                             (map str)
