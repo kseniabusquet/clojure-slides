@@ -1,4 +1,40 @@
+# REPL output files
+.calva/
+*.repl
+.nrepl-port
+.nrepl-history
+
+# Generated HTML files
+*.html
+
+# Environment variables
+.env
+
+# IDE and tooling files
 .clj-kondo
 .lsp
 .slide-cache
-.env
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+*.temp
+
+# Logs
+*.log
+
+# Node modules (if using any JS tooling)
+node_modules/
+
+# Build artifacts
+target/
+.cpcache/
