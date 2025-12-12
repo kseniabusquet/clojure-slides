@@ -48,10 +48,10 @@
                     (if (= 0 (.exitValue result))
                       (do
                         (reset! reload-timestamp (System/currentTimeMillis))
-                        (prn "✅ HTML updated and browser will reload!"))
-                      (prn "❌ Error regenerating HTML")))
+                        (prn "HTML updated and browser will reload!"))
+                      (prn "Error regenerating HTML")))
                   (catch Exception e
-                    (prn (str "❌ Error: " (.getMessage e)))))
+                    (prn (str "Error: " (.getMessage e)))))
                 (recur current-modified))
               (recur last-modified)))))))
 
@@ -68,18 +68,11 @@
         (doseq [[file-path last-mod] current-timestamps]
           (when-let [prev-mod (get previous-timestamps file-path)]
             (when (> last-mod prev-mod)
-              (prn (str "🔄 HTML file changed: " file-path))
+              (prn (str "HTML file changed: " file-path))
               (reset! reload-timestamp (System/currentTimeMillis))
-              (prn "✅ Browser will reload!"))))
+              (prn "Browser will reload!"))))
         (reset! watched-html-files current-timestamps)
         (recur)))))
-
-(defn get-latest-timestamp
-  "Get the latest modification time of all HTML files"
-  []
-  (->> (get-html-files)
-       (map #(.lastModified (io/file %)))
-       (apply max 0)))
 
 (defn inject-live-reload-script
   "Inject live reload JavaScript into HTML content"
@@ -127,17 +120,16 @@
 
   (start-file-watcher)
 
-  (prn "🚀 Starting Clojure HTTP server with live reload...")
-  (prn (str "📱 Open http://localhost:" port))
+  (prn (format "Starting Clojure HTTP server on http://localhost:%s..." port))
   (if @watched-file
-    (prn (str "👀 Live reload enabled for " @watched-file " and HTML files"))
-    (prn "👀 Live reload enabled for HTML files"))
+    (prn (str "Live reload enabled for " @watched-file " and HTML files"))
+    (prn "Live reload enabled for HTML files"))
   (prn "Press Ctrl+C to stop")
 
   (try
     (with-open [server-socket (ServerSocket.)]
       (.bind server-socket (InetSocketAddress. port))
-      (prn (str "✅ Server running on http://localhost:" port))
+      (prn "✅ Server is up and running!")
 
       (while true
         (with-open [client-socket (.accept server-socket)
@@ -187,10 +179,10 @@
                   (.println out "Content-Type: text/html")
                   (.println out "")
                   (.println out "<h1>404 Not Found</h1><p>The requested file was not found.</p>"))))))))
-    (catch java.net.BindException e
-      (prn (str "❌ Error: Port " port " is already in use"))
-      (prn "💡 Please choose a different port or stop the process using port " port)
-      (prn "💡 Example: bb serve 8080 workshop-clojure-4.smd")
+    (catch java.net.BindException _e
+      (prn (str "Error: Port " port " is already in use"))
+      (prn "Please choose a different port or stop the process using port " port)
+      (prn "Example: bb serve 8080 workshop-clojure-4.smd")
       (System/exit 1))))
 
 (defn -main [& args]
@@ -199,14 +191,14 @@
     (try
       (let [port (Integer/parseInt port-str)]
         (when (or (< port 1) (> port 65535))
-          (prn "❌ Error: Port must be between 1 and 65535")
+          (prn "Error: Port must be between 1 and 65535")
           (System/exit 1))
         (start-server port smd-file))
       (catch NumberFormatException _
-        (prn "❌ Error: Invalid port number. Please provide a valid port.")
-        (prn "💡 Usage: bb serve [port]")
-        (prn "💡 Example: bb serve 8080")
-        (prn (str "💡 You provided: '" port-str "' which is not a valid port number"))
+        (prn "Error: Invalid port number. Please provide a valid port.")
+        (prn "Usage: bb serve [port]")
+        (prn "Example: bb serve 8080")
+        (prn (str "You provided: '" port-str "' which is not a valid port number"))
         (System/exit 1)))))
 
 (when (= *file* (System/getProperty "babashka.file"))

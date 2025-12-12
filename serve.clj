@@ -79,23 +79,23 @@
   (let [smd-file (first args)
         port (Integer/parseInt (or (second args) "8080"))]
     (when-not smd-file
-      (println "❌ Usage: bb serve.clj <file.smd> [port]")
+      (println "Usage: bb serve.clj <file.smd> [port]")
       (System/exit 1))
 
     (let [html-file (str/replace smd-file #"\.smd$" ".html")
           reload-timestamp-atom (atom (System/currentTimeMillis))]
 
       ;; Generate initial HTML
-      (println "📝 Generating initial HTML...")
+      (println "Generating initial HTML...")
       (spit html-file (generate-html-with-livereload smd-file))
 
       ;; Start file watcher
       (start-file-watcher smd-file html-file reload-timestamp-atom)
 
       ;; Start HTTP server
-      (println (str "🚀 Starting server on http://localhost:" port))
-      (println (str "📱 Open http://localhost:" port "/" html-file))
-      (println "🔄 Live reload enabled - browser will refresh automatically")
+      (println (str "Starting server on http://localhost:" port))
+      (println (str "Open http://localhost:" port "/" html-file))
+      (println "Live reload enabled - browser will refresh automatically")
       (println "Press Ctrl+C to stop")
 
       (try
@@ -107,9 +107,9 @@
                          out (PrintWriter. (.getOutputStream client-socket) true)]
                 (handle-request in out reload-timestamp-atom))
               (catch Exception e
-                (println (str "⚠️  Request error: " (.getMessage e)))))))
+                (println (str "Request error: " (.getMessage e)))))))
         (catch Exception e
-          (println (str "❌ Server error: " (.getMessage e))))))))
+          (println (str "Server error: " (.getMessage e))))))))
 
 (when (= *file* (System/getProperty "babashka.file"))
   (apply -main *command-line-args*))
