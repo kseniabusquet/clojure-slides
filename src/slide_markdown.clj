@@ -144,6 +144,10 @@
         video-tag (str "<video " opts " src=\"data:" mime ";base64," b64 "\"></video>")]
     (wrap-element "video-content" (:style element) video-tag)))
 
+(defmethod render-slide-element "html" [element block _]
+  "Renders raw HTML content directly (useful for charts, widgets, etc.)"
+  (wrap-element "html-content" (:style element) block))
+
 (defmethod render-slide-element :default [element _ _]
   (str "<div style=\"" (:style element) "\">Unsupported: " (:type element) "</div>"))
 
@@ -176,6 +180,10 @@
       .content-element { box-sizing: border-box; padding: 1em 1em 1em 1em; padding-top: 0; }
       .text-content h1, .text-content h2, .text-content p, .text-content ul { margin: 0.5em 0; margin-top: 0; }
       .content-element img, .content-element video { max-width: 100%; max-height: 100%; display: block; margin: auto; }
+      .html-content { padding: 0; }
+      .html-content .chart-container { background: #f9f9f9; border-radius: 8px; padding: 15px; margin: 15px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+      .html-content .stats-header { text-align: center; background: #7EBA46; color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+      .html-content canvas { max-width: 100%; height: auto; }
       #nav-menu { position: fixed; top: 15px; left: 15px; z-index: 100; background-color: rgba(0,0,0,0.7); border-radius: 5px; padding: 8px; display: flex; gap: 5px; transition: opacity 0.3s; }
       #nav-menu.hidden { opacity: 0; pointer-events: none; }
       #nav-menu button, #nav-menu select { background-color: #444; color: white; border: none; border-radius: 3px; padding: 5px 8px; cursor: pointer; font-size: 16px; }
@@ -235,6 +243,90 @@
             return 0;
           }
 
+          // Re-initialize charts in a slide when it becomes visible
+          function initializeChartsInSlide(slideElement) {
+            if (!window.Chart) {
+              // Chart.js not loaded yet, try again later
+              setTimeout(() => initializeChartsInSlide(slideElement), 100);
+              return;
+            }
+
+            // Find all canvas elements in this slide
+            const canvases = slideElement.querySelectorAll('canvas[id^=\"chart\"]');
+            if (canvases.length === 0) return;
+
+            canvases.forEach(canvas => {
+              // Check if chart already exists using Chart.js API
+              let existingChart = null;
+              try {
+                if (window.Chart && window.Chart.getChart) {
+                  existingChart = window.Chart.getChart(canvas);
+                }
+              } catch (e) {
+                // Chart.getChart might not be available in older versions
+              }
+
+              if (existingChart) {
+                // Chart exists, try to resize it
+                try {
+                  if (typeof existingChart.resize === 'function') {
+                    existingChart.resize();
+                  }
+                } catch (e) {
+                  // Ignore resize errors
+                }
+                return;
+              }
+
+              // Find the script that should initialize this chart
+              const chartId = canvas.id;
+              const scripts = Array.from(slideElement.querySelectorAll('script'));
+
+              for (const script of scripts) {
+                // Look for script that contains this chart ID
+                if (script.textContent && script.textContent.includes(chartId) &&
+                    script.textContent.includes('getElementById') &&
+                    script.textContent.includes('new Chart')) {
+
+                  // Check if this script has already been executed for this canvas
+                  const executionKey = 'chart-executed-' + chartId;
+                  if (script.dataset[executionKey] === 'true') {
+                    // Already executed, but chart doesn't exist - try again
+                    script.dataset[executionKey] = 'false';
+                  }
+
+                  if (script.dataset[executionKey] === 'true') continue;
+
+                  try {
+                    // Mark as executed
+                    script.dataset[executionKey] = 'true';
+
+                    // Execute the script content
+                    const scriptContent = script.textContent.trim();
+                    if (scriptContent) {
+                      // Create a new script element to execute in proper context
+                      const newScript = document.createElement('script');
+                      newScript.textContent = scriptContent;
+                      // Append to the slide element so it has access to the canvas
+                      slideElement.appendChild(newScript);
+                      // Remove after a short delay
+                      setTimeout(() => {
+                        if (newScript.parentNode) {
+                          newScript.parentNode.removeChild(newScript);
+                        }
+                      }, 100);
+                    }
+                  } catch (e) {
+                    console.warn('Failed to initialize chart for ' + chartId + ':', e);
+                    // Reset execution flag on error so we can try again
+                    script.dataset[executionKey] = 'false';
+                  }
+                  break; // Found the script for this chart
+                }
+              }
+            });
+          }
+
           function show(idx) {
             if (idx < 0 || idx >= total) return;
             slides[currentSlide].classList.remove('active');
@@ -242,6 +334,12 @@
             slides[currentSlide].classList.add('active');
             if (select) select.value = currentSlide;
             saveSlidePosition(currentSlide);
+
+            // Re-initialize charts in the newly visible slide
+            // Use a longer delay to ensure Chart.js is loaded and slide transition is complete
+            setTimeout(() => {
+              initializeChartsInSlide(slides[currentSlide]);
+            }, 300);
           }
           function next() { show(currentSlide + 1); }
           function prev() { show(currentSlide - 1); }
@@ -270,10 +368,46 @@
             }
           });
 
-          // Restore saved position on load (after a small delay to ensure DOM is ready)
-          setTimeout(() => {
-            show(getSavedSlidePosition());
-          }, 0);
+          // Wait for Chart.js to load - check all slides for Chart.js scripts
+          function waitForChartJS(callback) {
+            if (window.Chart) {
+              callback();
+              return;
+            }
+
+            // Check if Chart.js script exists anywhere in the document
+            const chartScripts = document.querySelectorAll('script[src*=\"chart.js\"], script[src*=\"Chart.js\"]');
+            if (chartScripts.length > 0) {
+              // Wait for script to load
+              let attempts = 0;
+              const checkInterval = setInterval(() => {
+                if (window.Chart) {
+                  clearInterval(checkInterval);
+                  callback();
+                } else if (attempts++ > 100) {
+                  // Give up after 10 seconds
+                  clearInterval(checkInterval);
+                  console.warn('Chart.js did not load in time');
+                  callback();
+                }
+              }, 100);
+            } else {
+              // No Chart.js scripts found, proceed anyway
+              callback();
+            }
+          }
+
+          // Restore saved position on load (after ensuring Chart.js is ready)
+          waitForChartJS(() => {
+            setTimeout(() => {
+              const savedIdx = getSavedSlidePosition();
+              show(savedIdx);
+              // Also initialize charts in the initial slide
+              setTimeout(() => {
+                initializeChartsInSlide(slides[savedIdx]);
+              }, 500);
+            }, 200);
+          });
           menuVis();
           Prism.highlightAll();
          </script>")))
