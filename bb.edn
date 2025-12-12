@@ -1,34 +1,34 @@
 {:paths ["src" "test" "scripts"]
  :deps {markdown-clj/markdown-clj {:mvn/version "1.12.1"}
         clj-http/clj-http {:mvn/version "3.12.3"}
-        cheshire/cheshire {:mvn/version "5.12.0"}}
+        cheshire/cheshire {:mvn/version "5.12.0"}
+        nrepl/nrepl {:mvn/version "1.0.0"}}
  :tasks {test {:doc "Run all tests"
                :task (doseq [test-file (->> (file-seq (clojure.java.io/file "test"))
                                             (map str)
                                             (filter (fn [f] (clojure.string/ends-with? f "_test.clj"))))]
                        (load-file test-file))}
 
-         watch {:doc "🔍 Watch .smd file and auto-regenerate HTML"
+         watch {:doc "Watch .smd file and auto-regenerate HTML"
                 :requires ([clojure.java.io :as io])
                 :task (let [smd-file (first *command-line-args*)]
                         (when-not smd-file
-                          (println "❌ Usage: bb watch <file.smd>")
+                          (println "Usage: bb watch <file.smd>")
                           (System/exit 1))
-                        (println (str "👀 Watching " smd-file " for changes..."))
-                        (println "🔄 Generating initial HTML...")
+                        (println "Generating initial HTML...")
                         (shell "bb" "-f" "src/slide_markdown.clj" smd-file)
                         (loop [last-modified (.lastModified (io/file smd-file))]
                           (Thread/sleep 500)
                           (let [current-modified (.lastModified (io/file smd-file))]
                             (if (> current-modified last-modified)
                               (do
-                                (println "🔄 File changed, regenerating...")
+                                (println "File changed, regenerating...")
                                 (shell "bb" "-f" "src/slide_markdown.clj" smd-file)
-                                (println "✅ HTML updated!")
+                                (println "HTML updated!")
                                 (recur current-modified))
                               (recur last-modified)))))}
 
-         serve {:doc "🚀 Start Clojure HTTP server with live reload"
+         serve {:doc "Start Clojure HTTP server with live reload"
                 :task (shell "bb" "-f" "src/http_server.clj"
-                            (or (first *command-line-args*) "8080")
-                            (second *command-line-args*))}}}
+                             (or (first *command-line-args*) "8080")
+                             (second *command-line-args*))}}}
