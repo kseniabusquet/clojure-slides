@@ -2,7 +2,8 @@
   (:require [cheshire.core :as json]
             [babashka.http-client :as http]
             [clojure.string :as str]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [taoensso.timbre :as log]))
 
 (defn load-env-file [file]
   (when (.exists (io/file file))
@@ -30,7 +31,7 @@
           response (http/get url)]
       (-> response :body (json/parse-string true)))
     (catch Exception e
-      (prn "Authentication failed:" (.getMessage e)))))
+      (log/errorf "Authentication failed: %s" (.getMessage e)))))
 
 (defn get-submissions []
   (try
@@ -38,7 +39,7 @@
           response (http/get url)]
       (-> response :body (json/parse-string true)))
     (catch Exception e
-      (prn "Submissions fetching failed:" (.getMessage e)))))
+      (log/errorf "Submissions fetching failed:" (.getMessage e)))))
 
 (defn analyze-frequencies []
   (let [data (get-submissions)
@@ -264,5 +265,5 @@ document.addEventListener('DOMContentLoaded', function() {
       (spit smd-filename cleaned-content)
       (spit smd-filename (generate-survey-stats-smd) :append true))
     (spit smd-filename (generate-survey-stats-smd)))
-  (prn (format "Survey statistics slide saved to: %s" smd-filename))
-  (prn (format "Total submissions: %d" (:total-submissions (analyze-frequencies)))))
+  (log/infof "Survey statistics slide saved to: %s" smd-filename)
+  (log/infof "Total submissions: %d" (:total-submissions (analyze-frequencies))))

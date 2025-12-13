@@ -1,7 +1,7 @@
 (require '[clojure.java.io :as io]
          '[clojure.string :as str])
 (import '[java.net ServerSocket]
-        '[java.io BufferedReader InputStreamReader PrintWriter])
+        '[java.io BufferedReader InputStreamReader PrintWriter FileInputStream])
 
 (defn generate-html-with-livereload [smd-file]
   (load-file "src/slide_markdown.clj")
@@ -31,14 +31,14 @@
       (let [current-modified (.lastModified (io/file smd-file))]
         (if (> current-modified last-modified)
           (do
-            (println "🔄 File changed, regenerating...")
+            (println "File changed, regenerating...")
             (try
               (let [enhanced-html (generate-html-with-livereload smd-file)]
                 (spit html-file enhanced-html)
                 (reset! reload-timestamp-atom (System/currentTimeMillis))
-                (println "✅ HTML updated with live reload!"))
+                (println "HTML updated with live reload!"))
               (catch Exception e
-                (println (str "❌ Error: " (.getMessage e)))))
+                (println (str "Error: " (.getMessage e)))))
             (recur current-modified))
           (recur last-modified))))))
 
@@ -58,7 +58,8 @@
 
           :else
           (let [file-path (if (= path "/") "/index.html" path)
-                file (io/file (str "." file-path))]
+                file (io/file (str "." file-path))
+                is-image? (re-find #"\.(jpeg|jpg|png|gif|svg)$" file-path)]
             (if (.exists file)
               (do
                 (.println out "HTTP/1.1 200 OK")
@@ -66,9 +67,21 @@
                                                     (str/ends-with? file-path ".html") "text/html"
                                                     (str/ends-with? file-path ".css") "text/css"
                                                     (str/ends-with? file-path ".js") "application/javascript"
+                                                    (str/ends-with? file-path ".jpeg") "image/jpeg"
+                                                    (str/ends-with? file-path ".jpg") "image/jpeg"
+                                                    (str/ends-with? file-path ".png") "image/png"
+                                                    (str/ends-with? file-path ".gif") "image/gif"
+                                                    (str/ends-with? file-path ".svg") "image/svg+xml"
                                                     :else "text/plain")))
                 (.println out "")
-                (.print out (slurp file)))
+                (.flush out)
+                (if is-image?
+                  ;; Para imagens, usar InputStream e copiar bytes
+                  (with-open [fis (java.io.FileInputStream. file)
+                              os (.getOutputStream (.getSocket out))]
+                    (io/copy fis os))
+                  ;; Para texto, usar slurp normal
+                  (.print out (slurp file))))
               (do
                 (.println out "HTTP/1.1 404 Not Found")
                 (.println out "Content-Type: text/html")

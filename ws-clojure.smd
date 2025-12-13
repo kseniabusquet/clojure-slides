@@ -6,7 +6,7 @@
     :elements [{:type "text"
                 :style "left: 5%; top: 3%; color: #F9F9F9; text-align: left"}
                {:type "text"
-                :style "left: 5%; top: 20%; color: #222222; text-align: left"}]}
+                :style "left: 5%; top: 20%; color: #222222; text-align: left; line-height: 1.5;"}]}
 
    {; Template 2: Título Principal
     :id "title"
@@ -30,9 +30,33 @@
     :elements [{:type "text" ; Título
                 :style "left: 5%; top: 3%; color: #F9F9F9"}
                {:type "text" ; Coluna Esq
-                :style "left: 5%; top: 20%; color: #222222; width: 45%"}
+                :style "left: 5%; top: 20%; color: #222222; width: 45%; line-height: 1.5"}
                {:type "text" ; Coluna Dir
-                :style "left: 52%; top: 20%; color: #222222; width: 45%"}]}
+                :style "left: 52%; top: 20%; color: #222222; width: 45%; line-height: 1.5"}]}
+
+   {; Template : Três Blocos
+    :id "three-blocks"
+    :style "background: linear-gradient(to bottom, #587CC0 15%, #FFFFFF 15%)"
+    :elements [{:type "text" ; Título
+                :style "left: 5%; top: 3%; color: #F9F9F9"}
+               {:type "text" ;
+                :style "left: 5%; top: 20%; color: #222222; width: 80%; line-height: 1.5"}
+               {:type "text" ;
+                :style "left: 5%; top: 35%; color: #222222; width: 80%; line-height: 1.5"}
+              {:type "text" ;
+                :style "left: 5%; top: 45%; color: #222222; width: 80%; line-height: 1.5"}]}
+
+   {; Template : Três Blocos
+    :id "three-blocks-java"
+    :style "background: linear-gradient(to bottom, #587CC0 15%, #FFFFFF 15%)"
+    :elements [{:type "text" ; Título
+                :style "left: 5%; top: 3%; color: #F9F9F9"}
+               {:type "text" ;
+                :style "left: 5%; top: 20%; color: #222222; width: 80%; line-height: 1.5"}
+               {:type "text" ;
+                :style "left: 5%; top: 35%; color: #222222; width: 80%; line-height: 1.5"}
+              {:type "text" ;
+                :style "left: 5%; top: 55%; color: #222222; width: 80%; line-height: 1.5"}]},
 
    {; Template 5: Imagem Centralizada
     :id "image-center"
@@ -49,62 +73,193 @@
      :elements [{:type "text"
                  :style "left: 5%; top: 3%; color: #F9F9F9; text-align: left"}
                 {:type "html"
-                 :style "left: 5%; top: 20%; color: #222222; width: 90%; height: 100%; overflow-y: auto"}]}]}
+                 :style "left: 5%; top: 20%; color: #222222; width: 90%; height: 100%; overflow-y: auto"}]},
+
+    {; Template 7: Code is data
+    :id "code-is-data"
+    :style "background: linear-gradient(to bottom, #587CC0 15%, #FFFFFF 15%)"
+    :elements [{:type "text"
+                :style "left: 5%; top: 3%; color: #F9F9F9; text-align: left"}
+               {:type "text"
+                :style "left: 5%; top: 20%; color: #222222; text-align: left;"}
+               {:type "text"
+                :style "left: 5%; top: 35%; color: #222222; text-align: left; line-height: 2; margin-bottom: 3em;"}]},
+
+    {; Template 8: Threading Macros
+    :id "threading-macros"
+    :style "background: #222222"
+    :elements [{:type "text"
+                :style "left: 5%; top: 5%; color: #7EBA46; text-align: left"}
+               {:type "text"
+                :style "left: 5%; top: 20%; color: #F9F9F9; text-align: left"}
+               {:type "text"
+                :style "left: 5%; top: 40%; color: #F9F9F9; text-align: left"}]},
+
+   {; Template 6: Perfis (Quem somos) - AJUSTADO PARA FOTO EM CIMA
+    :id "profiles"
+    :style "background: linear-gradient(to bottom, #587CC0 15%, #FFFFFF 15%)"
+    :elements [{:type "text" ; Título
+                :style "left: 5%; top: 3%; color: #F9F9F9"}
+               {:type "text" ; Ksenia (Coluna Esquerda)
+                :style "left: 2%; top: 18%; width: 47%; font-size: 0.8em; color: #222; text-align: left"}
+               {:type "text" ; Gabriel (Coluna Direita)
+                :style "left: 51%; top: 18%; width: 47%; font-size: 0.8em; color: #222; text-align: left"}]}
+]}
 END
 -*-*- [title] Workshop de Clojure
-# Clojure: A Vida é uma Lista '(e o código é lindo).
+# Clojure: A Vida é uma Lista
+#<span style="color: #7EBA46;">'(</span>e o código é lindo<span style="color: #7EBA46;">)</span>.
 
 ### Um Lisp moderno para a JVM (e além!)
+
+-*-*- [profiles] Quem somos?
+# Quem somos?
+
+<div style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
+  <img src="assets/img/ksenia.jpeg" style="width: 300px; height: 300px; border-radius: 50%; object-fit: cover; border: 4px solid #587CC0;">
+  <div style="width: 100%;">
+    <h3 style="margin-top: 0; color: #587CC0; text-align: center;">Ksenia Busquet</h3>
+    <ul style="margin-top: 10px; font-size: 1.1em; line-height: 1.5;">
+      <li>Começou na programação há 3 anos</li>
+      <li>Pulou de POO direto para Clojure</li>
+      <li>Valoriza design funcional e imutabilidade</li>
+      <li>Acredita que criar novo estado é mais simples que mudar</li>
+    </ul>
+  </div>
+</div>
+
+<div style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
+  <img src="assets/img/gabriel.jpeg" style="width: 300px; height: 300px; border-radius: 50%; object-fit: cover; border: 4px solid #7EBA46;">
+  <div style="width: 100%;">
+    <h3 style="margin-top: 0; color: #7EBA46; text-align: center;">Gabriel Rezende Camargo</h3>
+    <ul style="margin-top: 10px; font-size: 1.1em; line-height: 1.5;">
+      <li>Trabalha com Mercado Financeiro desde 2022</li>
+      <li>Encontrou simplicidade no Clojure</li>
+      <li>Entusiasta da agilidade funcional</li>
+      <li>Prova que parênteses são mais simples que ponto e vírgula</li>
+    </ul>
+  </div>
+</div>
+
+-*-*- [image-center] Questionário
+
+# Questionário
+
+![QR Code](./assets/img/survey-qr-code.png)
 
 -*-*- O que vamos ver hoje?
 # Agenda
 
 1.  **Filosofia:** Por que Clojure é diferente?
-2.  **Fundamentos:** Sintaxe e REPL.
-3.  **Dados:** Imutabilidade e Estruturas.
-4.  **Funcional:** Map, Filter, Reduce.
-5.  **Composição:** Threading Macros.
-6.  **Prática:** Estado e Java Interop.
+2.  **Fundamentos:** Sintaxe e REPL
+3.  **Dados:** Imutabilidade e Estruturas
+4.  **Funcional:** Map, Filter, Reduce
+5.  **Composição:** Threading Macros
+6.  **Prática:** Estado e Java Interop
+7.  **Hands-on:** Geração de slides com IA generativa
 
 -*-*- O que é Clojure?
 # O que é Clojure?
 
-* Uma **Linguagem Dinâmica** (como Python ou Ruby).
-* Uma **Linguagem Funcional** (ênfase em funções e imutabilidade).
-* Um **Dialeto Lisp** (código é dado, sintaxe simples).
-* "Hospedada" (roda na **JVM**, **Javascript**, .NET, etc.).
-* Focada em **Simplicidade** e **Concorrência**.
+* Uma **Linguagem de Tipagem dinâmica** (como Python ou Javascript)
+* Uma **Linguagem Funcional** (ênfase em funções e imutabilidade)
+* Um **Dialeto Lisp**
+* "Hospedada", roda na **JVM** (também com implementações **Javascript** (ClojureScript) e **.NET**)
+* Focada em **Simplicidade** e **Concorrência**
+* Criada por Rich Hickey
+* Gerenciada pela Cognitect, financiada pelo Nubank
 
 -*-*- [split] Simples vs. Fácil
 # Filosofia: Simples vs. Fácil
 
-**"Fácil" (Easy)**
-* Significa "próximo", "familiar".
-* Ex: Um IDE com 1000 botões. É fácil de *começar* a clicar.
-* O fácil muitas vezes esconde complexidade ("mágica") que cobra o preço depois.
+**Fácil**
+* Significa "próximo", "familiar"
+* Ex: Um IDE com 1000 botões. É fácil de *começar* a clicar
+* O fácil muitas vezes esconde complexidade ("mágica") que cobra o preço depois
+
+
+**Simples**
+* O oposto de "complexo"
+* Uma ferramenta simples faz **uma** coisa
+* Peças simples podem ser compostas para construir sistemas robustos
+* *Rich Hickey*: "Simplicidade é um pré-requisito para confiabilidade"
+* Funções puras
+
+-*-*- [code] Isso é fácil...
+# Isso é fácil...
 
 
 
-**"Simples" (Simple)**
-* O oposto de "complexo" (que significa entrelaçado).
-* Uma ferramenta simples faz **uma** coisa.
-* Peças simples podem ser compostas para construir sistemas robustos.
-* *Rich Hickey*: "Simplicidade é um pré-requisito para confiabilidade."
+```java
+user.age++;
 
--*-*- Pilar 1: Code is Data
-# Filosofia: Code is Data (Homoiconicidade)
+// É familiar
+// É apenas um passo
+// É o que é o óbvio quando pensamos em mutação
 
-Em Lisp, o código é escrito usando as próprias estruturas de dados da linguagem.
 
-* O código é apenas uma **Lista**.
-* O primeiro elemento é a função, o resto são os argumentos.
-* O computador sabe "ler" essa lista e executar.
-* Isso permite **Macros**: escrever código que escreve código de forma trivial.
+```
+
+-*-*- [code] Mas não é simples
+# ...mas não é simples
+
+
+```java
+user.age++;
+
+// O objeto agora tem um valor diferente
+// Qualquer thread agora pode ver a mutação do valor
+// O Debug pode ficar complexo, perdemos o valor antigo
+
+```
+
+-*-*- [code] Isso é simples...
+# Isso é simples...
+
+
+
+```clojure
+(def usuario {:nome "Alice" :idade 30})
+(def usuario-atualizado (update usuario :idade inc))
+
+usuario-atualizado ; -> {:nome "Alice" :idade 31}
+
+;; Nenhuma mutação ocorre
+;; Nada está escondido
+;; 'usuario' e 'usuario-atualizado' são valores válidos
+;; Mudanças de estado estão explícitas e controladas
+
+```
+
+
+-*-*- [code] ...mas (talvez) não tão fácil
+# ...mas (talvez) não tão fácil/óbvio
+
+
+
+```clojure
+(def usuario {:nome "Alice" :idade 30})
+(def usuario-atualizado (update usuario :idade inc))
+
+usuario-atualizado ; -> {:nome "Alice" :idade 31}
+
+;; É preciso aprender sobre estruturas
+;; de dados persistentes e imutabilidade
+
+```
+
+-*-*- [code-is-data] Pilar 1: Code is Data
+# Filosofia: Code is Data
+
+***Homoiconicidade*** - a sintaxe é igual a uma estrutura de dados e pode ser manipulada desta forma
+
+* o código é apenas uma **Lista**
+* o primeiro elemento é a função, o resto são os argumentos
+* o computador sabe "ler" essa lista e executar
+* isso permite a existência dos **Macros**: escrever código que escreve código de forma trivial
 
 -*-*- [code] Exemplo de Sintaxe
 # Tudo é uma Lista
-
-
 
 ```clojure
 ;; Em Java/C#:  method(arg1, arg2)
@@ -116,106 +271,127 @@ Em Lisp, o código é escrito usando as próprias estruturas de dados da linguag
 ;; Uma lista de dados (com ' para não executar)
 '(1 2 3)
 
-;; Se eu tirar o quote ', o Clojure tenta executar o "1"
-(1 2 3) ; Erro! 1 não é uma função.
+;; Se tirar o apóstrofo ', o Clojure tenta executar o "1"
+(1 2 3) ; Erro! 1 não é uma função
 ```
 
--*-*- O Coração: REPL
+-*-*- [code] Exemplo de Macros
+# Macros
+
+```clojure
+;; Este código: (+ 1 2)
+;; É apenas uma lista: '(+ 1 2)
+;; Que pode ser manipulada como qualquer lista:
+
+(first '(+ 1 2))  ; => +
+(rest '(+ 1 2))   ; => (1 2)
+```
+
+-*-*- [code] Exemplo de Macros
+# Macros
+
+```clojure
+;; Um macro simples que duplica uma expressão
+(defmacro twice [expr]
+  `(do ~expr ~expr))
+
+;; Uso:
+(twice (println "Olá!"))
+;; Expande para: (do (println "Olá!") (println "Olá!"))
+;; Resultado: imprime "Olá!" duas vezes
+```
+
+-*-*- [code-is-data] O Coração: REPL
 # O REPL (Read-Eval-Print-Loop)
 
-Esqueça o ciclo "Escrever -> Compilar -> Esperar -> Rodar".
+Esqueça o ciclo ***"Escrever -> Compilar -> Esperar -> Rodar"***
 
-* No Clojure, você programa com a aplicação **rodando**.
-* Você envia pedaços de código para o REPL e vê o resultado instantaneamente.
-* É uma conversa com o seu programa, não um monólogo.
-* Feedback loop extremamente rápido = Maior produtividade.
+* No Clojure, você programa com a aplicação **rodando**
+* Você envia snippets de código para o REPL e vê o resultado instantaneamente
+* É uma conversa com o seu programa, não um monólogo
+* Feedback loop extremamente rápido = Maior produtividade
 
 -*-*- [split] Imutabilidade
 # Pilar 2: Imutabilidade
 
 **O Problema da Mutabilidade**
-* Se algo pode mudar a qualquer momento, você precisa "travar" (Lock) o código para evitar que duas threads mexam ao mesmo tempo.
-* Isso gera *Race Conditions*, Deadlocks e bugs difíceis de rastrear.
+* Se algo pode mudar a qualquer momento, você precisa "travar" (Lock) o código para evitar que duas threads mexam ao mesmo tempo
+* Isso gera *Race Conditions*, Deadlocks e bugs difíceis de rastrear
 
 
 
 **A Solução Clojure**
 * Valores não mudam. Nunca.
-* Quer mudar um vetor? Você cria um **novo** vetor com a alteração.
-* O antigo continua lá, intacto.
+* Quer mudar um vetor? Você cria um **novo** vetor com a alteração
+* O antigo continua lá, intacto
 * Isso torna a concorrência trivial e segura. Não precisa de Locks!
 
--*-*- [code] Estruturas de Dados
-# Estruturas de Dados Literais
+-*-*- [code] Exemplo de imutabilidade
+# Exemplo de imutabilidade
 
 
 
 ```clojure
-;; Vetor (acesso rápido por índice)
-[1 "olá" :keyword 3.14]
+(def vetor-1 [1 2 3])
 
-;; Mapa (chave-valor)
-{:nome "Ana" :idade 30 :skills [:clojure :java]}
+(def vetor-2 (conj vetor-1 4)) ; conj[oin]
 
-;; Lista (S-expression, sequencial)
-'(+ 1 2)
+vetor-1 ; => [1 2 3]
+vetor-2 ; => [1 2 3 4]
 
-;; Set (valores únicos)
-#{:a :b :c :a} ; => #{:a :b :c}
+;; O que acontece com tantas cópias
+;; de vetores na minha memória RAM?
+
 ```
 
--*-*- [split] Pensamento Funcional
+-*-*- [code] Estruturas de Dados Persistentes
+# Estruturas de Dados Persistentes
+
+
+
+```clojure
+vetor-1 ; => [1 2 3]
+vetor-2 ; => [1 2 3 4]
+
+;; Quando você “altera” um valor, apenas uma
+;; pequena parte da estrutura é recriada
+
+;; Valores antigos continuam existindo e válidos
+
+;; Isso torna a imutabilidade eficiente em memória
+;; e desempenho
+
+```
+
+-*-*- [code] Pensamento Funcional
 # Pensamento Funcional
 
-**Dados fluem, não mudam**
-Em vez de loops `for` alterando variáveis, usamos funções de ordem superior.
-
-* **Map:** Transforma cada item.
-* **Filter:** Seleciona itens.
-* **Reduce:** Combina itens em um resultado.
-
-
-
-**Exemplos Conceituais**
-
 ```clojure
+;; Dados fluem, não mudam
+;; Em vez de loops `for` alterando variáveis,
+;; usamos funções de ordem superior
+
+
+;; Map: Transforma cada item
 (map inc [1 2]) ; -> '(2 3)
+
+;; Filter: Seleciona itens
 (filter even? [1 2 3] ); -> '(2)
+
+;; Reduce: Combina itens em um resultado
 (reduce + [1 2 3]) ; -> 6
-```
 
--*-*- [code] Core Functions
-# O poder do Core
-
-
-
-```clojure
-(def numeros [1 2 3 4 5])
-
-;; Multiplicar todos por 10
-(map #(* % 10) numeros)
-;; => (10 20 30 40 50)
-
-;; Pegar só os maiores que 3
-(filter #(> % 3) numeros)
-;; => (4 5)
-
-;; Somar tudo
-(reduce + numeros)
-;; => 15
 ```
 
 -*-*- [code] O Problema do Aninhamento
 # O Problema da Leitura (Nesting)
 
-Sem composição, o código cresce para "dentro" (inside-out).
-
-
+Sem composição, o código tende a crescer para "dentro" (inside-out)
 
 ```clojure
 ;; Objetivo:
-;; Pegar usuários, filtrar ativos,
-;; pegar o email e converter para caixa alta.
+;; pegar usuários, filtrar ativos,
+;; pegar o email e converter para caixa alta
 
 (map upper-case
   (map :email
@@ -223,14 +399,16 @@ Sem composição, o código cresce para "dentro" (inside-out).
       (get-users))))
 
 ;; Difícil de ler a ordem de execução!
-;; Temos que ler de baixo para cima, de dentro pra fora.
+;; Temos que ler de baixo para cima, de dentro pra fora
 ```
 
--*-*- [code] Threading Macros
-# A Solução: Threading Macros (->>)
+-*-*- [threading-macros] Threading Macros
+# A Solução: Threading Macros (-> e ->>)
 
-O operador `->>` passa o resultado da linha anterior como o *último* argumento da próxima linha.
-
+- Operador <span style="color: #7EBA46; font-size: 1.2em;">`->`</span>
+ passa o resultado da linha anterior como o <span style="color: #7EBA46">primeiro</span> argumento da próxima linha
+- Operador <span style="color: #7EBA46; font-size: 1.2em;">`->>`</span>
+ passa o resultado da linha anterior como o <span style="color: #7EBA46">último</span> argumento da próxima linha
 
 
 ```clojure
@@ -241,26 +419,23 @@ O operador `->>` passa o resultado da linha anterior como o *último* argumento 
      (sort))              ; Ordena
 
 ;; Muito mais legível!
-;; Lê-se de cima para baixo, como uma receita.
+;; Lê-se de cima para baixo, como uma receita
 ```
 
--*-*- [split] Gerenciamento de Estado
+-*-*- [three-blocks] Gerenciamento de Estado
 # E quando precisamos de Estado?
 
-**O Mundo é Mutável**
-Apesar da imutabilidade interna, precisamos lidar com banco de dados, tela do usuário, etc.
+**O Mundo é Mutável** - apesar da imutabilidade interna, precisamos lidar com banco de dados, tela do usuário, etc.
 
 Clojure isola a mutabilidade em tipos específicos chamados de **Referências**.
 
-
-
 **Atoms**
-* O tipo mais comum para estado local.
-* É como uma "caixa" que guarda um valor imutável.
-* Você pode trocar o valor da caixa de forma atômica (thread-safe).
+* O tipo mais comum para estado local
+* É como uma "caixa" que guarda um valor imutável
+* Você pode trocar o valor da caixa de forma atômica (thread-safe)
 
 -*-*- [code] Usando Atoms
-# Brincando com o Tempo (Estado)
+# Brincando com o estado
 
 
 
@@ -278,7 +453,7 @@ Clojure isola a mutabilidade em tipos específicos chamados de **Referências**.
 (reset! contador 0) ; => 0
 ```
 
--*-*- [split] Java Interop
+-*-*- [three-blocks-java] Java Interop
 # Java Interop
 
 **O Poder da JVM**
@@ -289,9 +464,9 @@ Você pode usar **qualquer** biblioteca Java (Spring, Hibernate, Apache Commons,
 
 
 **Sintaxe Simples**
-* `.` para chamar métodos.
-* `/` para métodos estáticos.
-* `new` (ou `.`) para instanciar.
+* `.` para chamar métodos
+* `/` para métodos estáticos
+* `new` (ou `.`) para instanciar
 
 -*-*- [code] Java Interop Exemplos
 # Usando Java no Clojure
@@ -310,7 +485,6 @@ Você pode usar **qualquer** biblioteca Java (Spring, Hibernate, Apache Commons,
 ;; Chamando método de instância (.toUpperCase)
 (.toUpperCase "clojure é legal")
 ;; => "CLOJURE É LEGAL"
-
 ```
 
 -*-*- Concorrência
@@ -318,19 +492,17 @@ Você pode usar **qualquer** biblioteca Java (Spring, Hibernate, Apache Commons,
 
 Além de Atoms, Clojure oferece ferramentas de alto nível:
 
-* **Futures:** Execute algo em outra thread e pegue o valor depois.
-  `(future (processamento-pesado))`
-* **Promises:** Promessa de um valor futuro.
-* **pmap:** "Parallel Map". Processa uma lista usando múltiplos núcleos da CPU automaticamente.
-  `(pmap processar-dados lista-gigante)`
+* **Futures:** Execute algo em outra thread e pegue o valor depois
+* **Promises:** Promessa de um valor futuro
+* **pmap:** "Parallel Map". Processa uma lista usando múltiplos núcleos da CPU automaticamente
 
 -*-*- Próximos Passos
 # Próximos Passos
 
-1.  **Instale:** Leiningen ou Clojure CLI.
-2.  **Editor:** VS Code (Calva) ou IntelliJ (Cursive).
-3.  **Pratique:** 4clojure.oxal.org (Exercícios lógicos).
-4.  **Livro:** "Clojure for the Brave and True" (Grátis online).
+1.  **Instale:** Leiningen ou Clojure CLI
+2.  **Editor:** VS Code (Calva) ou IntelliJ (Cursive)
+3.  **Pratique:** 4clojure.oxal.org (Exercícios lógicos)
+4.  **Livro:** "Clojure for the Brave and True" (Grátis online)
 
 -*-*- [title] Obrigado!
 # Obrigado!
@@ -338,9 +510,3 @@ Além de Atoms, Clojure oferece ferramentas de alto nível:
 Perguntas?
 
 *(Gerado via SlideMD)*
-
--*-*- [image-center] Questionário
-
-# Questionário para a parte interativa
-
-![QR Code](./assets/img/survey-qr-code.png)

@@ -1,5 +1,6 @@
 (require '[clojure.java.io :as io]
-         '[clojure.string :as str])
+         '[clojure.string :as str]
+         '[taoensso.timbre :as log])
 
 (import '[java.net ServerSocket InetSocketAddress]
         '[java.io BufferedReader InputStreamReader PrintWriter OutputStreamWriter])
@@ -33,44 +34,42 @@
   ;; Watch .smd file if provided
   (when @watched-file
     (let [smd-file @watched-file]
-      (prn (str "👀 Watching " smd-file " for changes..."))
       (future
         (loop [last-modified (.lastModified (io/file smd-file))]
           (Thread/sleep 500)
           (let [current-modified (.lastModified (io/file smd-file))]
             (if (> current-modified last-modified)
               (do
-                (prn "🔄 File changed, regenerating HTML...")
+                (log/info "File changed, regenerating HTML...")
                 (try
                   (let [result (.exec (Runtime/getRuntime)
-                                     (into-array ["bb" "-f" "src/slide_markdown.clj" smd-file]))]
+                                      (into-array ["bb" "-f" "src/slide_markdown.clj" smd-file]))]
                     (.waitFor result)
                     (if (= 0 (.exitValue result))
                       (do
                         (reset! reload-timestamp (System/currentTimeMillis))
-                        (prn "HTML updated and browser will reload!"))
-                      (prn "Error regenerating HTML")))
+                        (log/info "HTML updated and browser will reload!"))
+                      (log/error "Error regenerating HTML")))
                   (catch Exception e
-                    (prn (str "Error: " (.getMessage e)))))
+                    (log/error (str "Error: " (.getMessage e)))))
                 (recur current-modified))
               (recur last-modified)))))))
 
   ;; Always watch HTML files for changes
   (future
-    (prn "👀 Watching HTML files for changes...")
     (loop []
       (Thread/sleep 500)
       (let [html-files (get-html-files)
             current-timestamps (->> html-files
-                                   (map (fn [f] [f (.lastModified (io/file f))]))
-                                   (into {}))
+                                    (map (fn [f] [f (.lastModified (io/file f))]))
+                                    (into {}))
             previous-timestamps @watched-html-files]
         (doseq [[file-path last-mod] current-timestamps]
           (when-let [prev-mod (get previous-timestamps file-path)]
             (when (> last-mod prev-mod)
-              (prn (str "HTML file changed: " file-path))
+              (log/infof "HTML file changed: " file-path)
               (reset! reload-timestamp (System/currentTimeMillis))
-              (prn "Browser will reload!"))))
+              (log/info "Browser will reload!"))))
         (reset! watched-html-files current-timestamps)
         (recur)))))
 
@@ -111,8 +110,8 @@
   ;; Initialize HTML file timestamps
   (let [html-files (get-html-files)
         initial-timestamps (->> html-files
-                               (map (fn [f] [f (.lastModified (io/file f))]))
-                               (into {}))]
+                                (map (fn [f] [f (.lastModified (io/file f))]))
+                                (into {}))]
     (reset! watched-html-files initial-timestamps))
 
   (when smd-file-arg
@@ -120,30 +119,30 @@
 
   (start-file-watcher)
 
-  (prn (format "Starting Clojure HTTP server on http://localhost:%s..." port))
+  (log/infof "Starting Clojure HTTP server on http://localhost:%s..." port)
   (if @watched-file
-    (prn (str "Live reload enabled for " @watched-file " and HTML files"))
-    (prn "Live reload enabled for HTML files"))
-  (prn "Press Ctrl+C to stop")
+    (log/infof "Live reload enabled for %s and HTML files" @watched-file)
+    (log/info "Live reload enabled for HTML files"))
 
   (try
     (with-open [server-socket (ServerSocket.)]
       (.bind server-socket (InetSocketAddress. port))
-      (prn "✅ Server is up and running!")
+      (log/info "✅ Server is up and running!")
+      (log/info "Press Ctrl+C to stop")
 
       (while true
         (with-open [client-socket (.accept server-socket)
-                   in (BufferedReader. (InputStreamReader. (.getInputStream client-socket)))
-                   out (PrintWriter. (OutputStreamWriter. (.getOutputStream client-socket)) true)]
+                    in (BufferedReader. (InputStreamReader. (.getInputStream client-socket)))
+                    out (PrintWriter. (OutputStreamWriter. (.getOutputStream client-socket)) true)]
           (when-let [request-line (.readLine in)]
             (let [parts (str/split request-line (re-pattern " "))
                   path (second parts)
                   path (if (= path "/")
                          (let [html-files (->> (io/file ".")
-                                             (.listFiles)
-                                             (filter #(.isFile %))
-                                             (filter #(str/ends-with? (.getName %) ".html"))
-                                             (map #(.getName %)))]
+                                               (.listFiles)
+                                               (filter #(.isFile %))
+                                               (filter #(str/ends-with? (.getName %) ".html"))
+                                               (map #(.getName %)))]
                            (if (seq html-files)
                              (str "/" (first html-files))
                              "/index.html"))
@@ -165,8 +164,8 @@
                 (let [content-type (get-content-type path)
                       content (slurp file)
                       enhanced-content (if (= content-type "text/html")
-                                        (inject-live-reload-script content)
-                                        content)]
+                                         (inject-live-reload-script content)
+                                         content)]
                   (.println out "HTTP/1.1 200 OK")
                   (.println out (str "Content-Type: " content-type))
                   (.println out "Cache-Control: no-cache")
@@ -180,9 +179,9 @@
                   (.println out "")
                   (.println out "<h1>404 Not Found</h1><p>The requested file was not found.</p>"))))))))
     (catch java.net.BindException _e
-      (prn (str "Error: Port " port " is already in use"))
-      (prn "Please choose a different port or stop the process using port " port)
-      (prn "Example: bb serve 8080 workshop-clojure-4.smd")
+      (log/errorf "Error: Port %s is already in use" port)
+      (log/infof "Please choose a different port or stop the process using port " port)
+      (log/info "Example: bb serve 8080 ws-clojure.smd")
       (System/exit 1))))
 
 (defn -main [& args]
@@ -191,14 +190,14 @@
     (try
       (let [port (Integer/parseInt port-str)]
         (when (or (< port 1) (> port 65535))
-          (prn "Error: Port must be between 1 and 65535")
+          (log/error "Error: Port must be between 1 and 65535")
           (System/exit 1))
         (start-server port smd-file))
       (catch NumberFormatException _
-        (prn "Error: Invalid port number. Please provide a valid port.")
-        (prn "Usage: bb serve [port]")
-        (prn "Example: bb serve 8080")
-        (prn (str "You provided: '" port-str "' which is not a valid port number"))
+        (log/error "Error: Invalid port number. Please provide a valid port.")
+        (log/info "Usage: bb serve [port]")
+        (log/info "Example: bb serve 8080")
+        (log/infof "You provided: '%s' which is not a valid port number" port-str)
         (System/exit 1)))))
 
 (when (= *file* (System/getProperty "babashka.file"))
